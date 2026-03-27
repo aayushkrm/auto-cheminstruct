@@ -58,6 +58,7 @@ Target Molecule
 ---
 
 ## Project Structure
+
 auto-cheminstruct/
 │
 ├── auto_cheminstruct/
