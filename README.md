@@ -48,7 +48,7 @@ Target Molecule
                   ▼                                         ▼
          ┌─────────────────────────────────────────────────────┐
          │               dataset_builder.py                    │
-         │   builds preference pair: chosen ✅  vs rejected ❌ │
+         │   builds preference pair: chosen ✅  vs rejected ❌  │
          └─────────────────────────────────────────────────────┘
                   │
                   ▼
