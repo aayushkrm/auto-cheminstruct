@@ -59,6 +59,7 @@ Target Molecule
 
 ## Project Structure
 
+```
 auto-cheminstruct/
 │
 ├── auto_cheminstruct/
@@ -83,7 +84,7 @@ auto-cheminstruct/
 ├── LICENSE
 └── README.md
 
-text
+```
 
 ---
 
