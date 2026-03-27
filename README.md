@@ -36,19 +36,19 @@ Target Molecule
 │                     │    -  Reagent incompatibilities?
 └─────────────────────┘
        │
-       ├──── valid route ──────────────────────────────────┐
+       ├──── valid route ───────────────────────────────────┐
        │                                                    │
        └──── invalid route                                  │
                   │                                         │
                   ▼                                         │
    ┌───────────────────────────┐                            │
-   │   reflection_agent.py     │  ← LLM explains the error │
+   │   reflection_agent.py     │  ← LLM explains the error  │
    └───────────────────────────┘                            │
                   │                                         │
                   ▼                                         ▼
          ┌─────────────────────────────────────────────────────┐
-         │               dataset_builder.py                     │
-         │   builds preference pair: chosen ✅  vs rejected ❌  │
+         │               dataset_builder.py                    │
+         │   builds preference pair: chosen ✅  vs rejected ❌ │
          └─────────────────────────────────────────────────────┘
                   │
                   ▼
