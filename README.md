@@ -1,3 +1,17 @@
+# auto-cheminstruct
+
+![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square&logo=python)
+![LLM](https://img.shields.io/badge/LLM-Fine--tuning-orange?style=flat-square)
+![DPO](https://img.shields.io/badge/Training-DPO-purple?style=flat-square)
+![Chemistry](https://img.shields.io/badge/Domain-Chemistry-green?style=flat-square&logo=atom)
+![GitHub stars](https://img.shields.io/github/stars/aayushkrm/auto-cheminstruct?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/aayushkrm/auto-cheminstruct?style=flat-square)
+![GitHub issues](https://img.shields.io/github/issues/aayushkrm/auto-cheminstruct?style=flat-square)
+![Last Commit](https://img.shields.io/github/last-commit/aayushkrm/auto-cheminstruct?style=flat-square)
+![License](https://img.shields.io/github/license/aayushkrm/auto-cheminstruct?style=flat-square)
+![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)
+![Build](https://img.shields.io/github/actions/workflow/status/aayushkrm/auto-cheminstruct/main.yml?style=flat-square)
+![Code style: black](https://img.shields.io/badge/code%20style-black-000000?style=flat-square)
 [![Zread](https://img.shields.io/badge/Documentation-Read-yellow)](https://zread.ai/aayushkrm/auto-cheminstruct)
 
 # 🧪 Auto-ChemInstruct v0.1
