@@ -1,3 +1,5 @@
+[![Zread](https://img.shields.io/badge/Docs-Zread-blue)](https://zread.ai/aayushkrm/auto-cheminstruct)
+
 # 🧪 Auto-ChemInstruct v0.1
 
 > An automated pipeline that generates, validates, and annotates LLM-generated
