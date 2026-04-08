@@ -1,4 +1,4 @@
-[![Read-Here](https://img.shields.io/badge/Documentation-Zread-yellow)](https://zread.ai/aayushkrm/auto-cheminstruct)
+[![Zread](https://img.shields.io/badge/Documentation-Read-Here-yellow)](https://zread.ai/aayushkrm/auto-cheminstruct)
 
 # 🧪 Auto-ChemInstruct v0.1
 
