@@ -1,0 +1,75 @@
+# Auto-ChemInstruct Default Configuration
+# Fireworks AI (OpenAI-compatible) — deepseek-v4-pro reasoning model
+
+pipeline:
+  batch_size: 1
+  max_iterations: 10000
+  max_retries_per_hypothesis: 3
+  checkpoint_dir: .checkpoints
+  checkpoint_interval: 10
+  seed: 42
+  temperature_schedule: cosine
+  temperature_max: 1.0
+  temperature_min: 0.3
+  bootstrap_iterations: 1
+
+llm:
+  provider: fireworks
+  model: accounts/fireworks/models/deepseek-v4-pro
+  base_url: https://api.fireworks.ai/inference/v1
+  api_key: fw_LKEynq4Sxf7G1PYFGWRx4t
+  temperature: 0.8
+  max_tokens: 4096
+  request_timeout: 180
+  top_p: 0.95
+
+hypothesis_agent:
+  name: HypothesisGenerator
+  temperature: 0.9
+  top_p: 0.95
+  max_tokens: 4096
+  num_generations_per_prompt: 1
+  prompt_template_version: v1
+  max_smiles_length: 500
+
+verification_agent:
+  name: PhysicalVerifier
+  enable_xtb: true
+  xtb_method: GFN2-xTB
+  xtb_timeout: 300
+  xtb_max_atoms: 100
+  energy_barrier_threshold: 40.0
+  sa_score_min: 1.0
+  sa_score_max: 8.0
+  qed_min: 0.0
+
+reflection_agent:
+  name: CausalReflector
+  temperature: 0.3
+  max_tokens: 1024
+  prompt_template_version: v1
+
+compilation_agent:
+  name: DatasetCompiler
+  output_format: dpo
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  min_pairs_per_reaction_type: 10
+  deduplicate: true
+
+rag:
+  enabled: true
+  embedding_model: text-embedding-3-small
+  chroma_persist_dir: .chromadb
+  retrieval_k: 5
+  use_reranker: false
+
+database:
+  sqlite_path: .state/autochem.db
+
+logging:
+  level: INFO
+  file: logs/autochem.log
+  rotation: 100 MB
+  retention: 30 days

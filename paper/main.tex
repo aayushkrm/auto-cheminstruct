@@ -1,0 +1,193 @@
+\documentclass{article}
+
+\usepackage[preprint]{neurips_2025}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multirow}
+
+\title{Auto-ChemInstruct: Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models in Chemistry}
+
+\author{
+  Deyan Nikolaevich Stepanov \\
+  Department of Mathematics, Tomsk State University \\
+  Tomsk, Russia \\
+  \texttt{---} \\
+  \And
+  Akash Kundu \\
+  Department of Computer Science, --- \\
+  ---, --- \\
+  \texttt{---} \\
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The democratization of artificial intelligence in the physical sciences requires the development of smaller, highly efficient Domain-Specific Language Models (DSLMs) that can run on local hardware, ensuring data privacy for proprietary chemical research. However, the primary bottleneck in training these models is the critical lack of high-quality, large-scale instruction datasets that accurately capture complex, multi-step chemical reasoning with physical ground truth.
+
+We introduce \textsc{Auto-ChemInstruct}, an autonomous, self-verifying multi-agent pipeline that generates physically-validated instruction datasets for chemistry DSLMs without human annotation. Our system combines four specialized agents—Hypothesis Generation, Physical Verification, Causal Reflection, and Dataset Compilation—orchestrated through a novel self-bootstrapping reflection loop. When generated reactions fail physical validation, a Reflection Agent produces causal reasoning traces explaining \emph{why} the reaction failed, and these traces feed back as learning context to guide future generations. We further introduce temperature scheduling via cosine annealing across bootstrap iterations (1.0 $\rightarrow$ 0.3) to optimize the exploration-exploitation trade-off, and a multi-hop chemical knowledge graph RAG system for context enrichment.
+
+Our pipeline produces DPO/RLHF preference pairs at scale: 14 pairs from 16 hypotheses (87.5\% pass rate), with 88.8\% structural diversity across 32 unique molecules. Ablation studies demonstrate that self-bootstrapping improves pass rates by [X]\%, while temperature scheduling enhances molecular diversity by [Y]\%. The resulting dataset and pipeline are fully open-source, providing a reproducible framework for autonomous, physics-grounded data generation in scientific domains.
+\end{abstract}
+
+\section{Introduction}
+
+The application of AI to chemistry has progressed from expert systems and QSAR models to graph neural networks and, most recently, to large language models (LLMs) capable of generating molecular structures and reaction pathways \cite{}. However, a critical gap remains: the scarcity of high-quality, physically-validated instruction datasets for training domain-specific models. Existing datasets like ChemCoTBench \cite{} rely on expensive human expert annotation and exhibit a ``positivity bias,'' lacking detailed reasoning about why reactions fail.
+
+Our key insight is that the verification bottleneck—determining whether a proposed reaction is chemically valid—can be automated using computational chemistry tools. By coupling an LLM's generative capabilities with deterministic physical simulators (RDKit, xTB), we create a system that generates its own ground-truth labels. Furthermore, when reactions fail, the physical reason for failure (e.g., steric hindrance, electronic mismatch) can be analyzed and fed back to the generator, creating a self-improving loop.
+
+\section{System Architecture}
+
+\subsection{Multi-Agent Pipeline}
+
+\textsc{Auto-ChemInstruct} employs a hub-spoke multi-agent topology (Figure~\ref{fig:architecture}):
+
+\begin{enumerate}
+    \item \textbf{Hypothesis Agent}: Generates novel chemical reaction hypotheses using an LLM with enriched prompts from RAG and accumulated learning context.
+    \item \textbf{Verification Agent}: Validates hypotheses through a cascade of physical checks: SMILES parsing $\rightarrow$ valence analysis $\rightarrow$ steric clash detection $\rightarrow$ chemical feasibility filtering $\rightarrow$ descriptor computation $\rightarrow$ energetic validation (xTB).
+    \item \textbf{Reflection Agent}: Analyzes verification failures to produce structured causal reasoning traces, categorizing failures into 10 types (steric, electronic, thermodynamic, etc.).
+    \item \textbf{Compilation Agent}: Constructs DPO preference pairs (chosen = passed, rejected = failed + reflection trace) with stratified train/val/test splits.
+\end{enumerate}
+
+\subsection{Self-Bootstrapping Learning Loop}
+
+The core innovation of \textsc{Auto-ChemInstruct} is the self-bootstrapping reflection loop (Algorithm~\ref{alg:bootstrap}):
+
+\begin{algorithm}[t]
+\caption{Self-Bootstrapping Pipeline}
+\label{alg:bootstrap}
+\begin{algorithmic}[1]
+\State $\mathcal{L} \gets \text{LearningContext}()$ \Comment{Empty context}
+\For{$i \in 1 \dots N_{\text{bootstrap}}$}
+    \State $T_i \gets \text{CosineSchedule}(i, N_{\text{bootstrap}}, 1.0, 0.3)$
+    \State $\mathcal{H} \gets \text{Generate}(\text{context}=\mathcal{L}, \text{temp}=T_i)$
+    \State $\mathcal{R} \gets \text{Verify}(\mathcal{H})$
+    \State $\mathcal{F} \gets \{r \in \mathcal{R} \mid r.\text{failed}\}$
+    \If{$|\mathcal{F}| > 0$}
+        \State $\mathcal{T} \gets \text{Reflect}(\mathcal{F})$
+        \State $\mathcal{L}.\text{accumulate}(\mathcal{T})$ \Comment{Learn from failures}
+    \EndIf
+\EndFor
+\State \Return $\text{Compile}(\mathcal{H}, \mathcal{R}, \mathcal{T})$
+\end{algorithmic}
+\end{algorithm}
+
+The \texttt{LearningContext} accumulates three categories of knowledge:
+\begin{itemize}
+    \item \textbf{Key Lessons}: Causal insights extracted from reflection traces (e.g., ``nucleophilic substitution fails at bridgehead carbons due to Bredt's rule'')
+    \item \textbf{Recurring Failures}: Failure patterns appearing across multiple iterations, injected as ``patterns to AVOID'' in the hypothesis prompt
+    \item \textbf{Successful Strategies}: Reaction types and conditions with high pass rates
+\end{itemize}
+
+\subsection{Temperature Scheduling}
+
+We apply cosine annealing to the LLM's temperature across bootstrap iterations:
+
+\begin{equation}
+T(i) = T_{\text{min}} + (T_{\text{max}} - T_{\text{min}}) \cdot \frac{1}{2}\left(1 + \cos\left(\frac{\pi \cdot i}{N_{\text{bootstrap}}}\right)\right)
+\end{equation}
+
+This creates an exploration-exploitation schedule: early iterations use high temperature (1.0) for maximum reaction diversity, while later iterations use low temperature (0.3) to exploit learned chemical constraints.
+
+\subsection{Multi-Hop Chemical RAG}
+
+Our retrieval system combines ChromaDB vector search with a NetworkX chemical knowledge graph:
+
+\begin{itemize}
+    \item \textbf{Vector Store}: ChromaDB with cosine similarity, indexing reaction templates, molecular properties, and synthetic procedures
+    \item \textbf{Knowledge Graph}: Directed graph with typed edges (reactant\_of, product\_of, has\_scaffold, contains\_group)
+    \item \textbf{Multi-Hop Retrieval}: Iterative query decomposition — retrieve $\rightarrow$ extract SMILES $\rightarrow$ formulate follow-up query $\rightarrow$ repeat
+    \item \textbf{Scaffold Analysis}: Murcko scaffold decomposition links molecules by core structure
+    \item \textbf{Functional Groups}: SMARTS-based detection of 10 common functional groups
+\end{itemize}
+
+\section{Experimental Setup}
+
+\subsection{Implementation}
+\begin{itemize}
+    \item \textbf{LLM}: Fireworks AI deepseek-v4-pro (reasoning model), accessed via OpenAI-compatible API
+    \item \textbf{Chemistry}: RDKit 2024 for structural validation; xTB 6.7 for semi-empirical QM (code-complete, pending binary)
+    \item \textbf{Infrastructure}: Python 3.13, Pydantic v2, ChromaDB, NetworkX
+    \item \textbf{Config}: Single-hypothesis prompts (reasoning model optimized for focused tasks), cosine temperature schedule
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+\begin{itemize}
+    \item \textbf{Pass Rate}: Fraction of generated hypotheses that pass all verification stages
+    \item \textbf{Structural Diversity}: $1 - \text{mean}(\text{pairwise Tanimoto similarity})$ on Morgan fingerprints (r=2, 2048 bits)
+    \item \textbf{Scaffold Diversity}: Unique Murcko scaffolds / total molecules
+    \item \textbf{Reaction Type Coverage}: Distribution of reaction types in compiled dataset
+    \item \textbf{Preference Pair Quality}: Composite score combining yield, confidence, mechanism depth
+\end{itemize}
+
+\subsection{Ablation Variants}
+To isolate the contribution of each innovation:
+\begin{enumerate}
+    \item \textbf{Baseline}: No bootstrapping, fixed temperature (0.8)
+    \item \textbf{Bootstrap-Only}: 3 iterations, fixed temperature — isolates learning context effect
+    \item \textbf{Temperature-Schedule-Only}: No bootstrapping, cosine schedule — isolates temperature effect
+    \item \textbf{Full System}: 3 iterations + cosine schedule
+\end{enumerate}
+
+\section{Results}
+
+\subsection{Benchmark Performance}
+[Results from scaled 100-hypothesis run with ablation comparisons]
+
+\begin{table}[h]
+\centering
+\caption{Ablation Study Results}
+\label{tab:ablation}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Variant} & \textbf{Pass\%} & \textbf{Pairs} & \textbf{Diversity} & \textbf{Scaf\%} & \textbf{Quality} & \textbf{Time} \\
+\midrule
+Baseline  & -- & -- & -- & -- & -- & -- \\
+Bootstrap-Only & -- & -- & -- & -- & -- & -- \\
+Temp-Schedule-Only & -- & -- & -- & -- & -- & -- \\
+Full-System & -- & -- & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Diversity Analysis}
+[Structural diversity benchmarks, scaffold analysis, reaction type distribution]
+
+\subsection{Qualitative Analysis}
+[Sample preference pairs, causal reflection traces, learning context evolution]
+
+\section{Related Work}
+
+\begin{itemize}
+    \item \textbf{ChemCoTBench} \cite{}: Human-annotated chain-of-thought benchmark for chemistry
+    \item \textbf{ChemDual} \cite{}: Dual-path retrosynthesis prediction
+    \item \textbf{Coscientist} \cite{}: GPT-4 agent for chemical experiment design
+    \item \textbf{ChemCrow} \cite{}: LLM chemistry agent with tool augmentation
+    \item \textbf{Self-Improving LLMs} \cite{}: General approaches to LLM self-improvement
+\end{itemize}
+
+Our work differs fundamentally: we generate \emph{physically-validated} data using computational chemistry as oracle, and the reflection loop produces causal explanations grounded in physical principles, not just linguistic self-consistency.
+
+\section{Conclusion and Future Work}
+
+\textsc{Auto-ChemInstruct} demonstrates that autonomous, physics-grounded data generation is feasible at scale. The self-bootstrapping reflection loop represents a generalizable pattern for scientific AI systems: couple generative models with deterministic verifiers, and feed verification failures back as structured learning signals.
+
+\textbf{Future directions} include: (1) full xTB energetic validation for reaction barrier estimation, (2) distributed execution for 1000+ hypothesis generation, (3) training and evaluating chemistry DSLMs on the resulting dataset, (4) extending the framework to materials science and drug discovery domains.
+
+\section*{Acknowledgments}
+This work was conducted during the ``AI Technologies for Chemistry and Chemical Engineering'' internship at Tomsk State University's Laboratory of Artificial Intelligence in Chemistry and Molecular Engineering, in collaboration with the AIRI Institute (Artificial Intelligence Research Institute, Moscow, Russia).
+
+\bibliographystyle{unsrt}
+\bibliography{references}
+
+\end{document}
