@@ -1,0 +1,41 @@
+{
+  "title": "Auto-ChemInstruct: Agent-Driven Synthesization of RLHF Data for Chemistry DSLMs",
+  "description": "Auto-ChemInstruct is an autonomous multi-agent pipeline that generates physically-validated instruction datasets for chemistry domain-specific language models. The system combines four specialized agents (Hypothesis Generation, Physical Verification, Causal Reflection, Dataset Compilation) orchestrated through a self-bootstrapping reflection loop with temperature cosine annealing. This repository contains the full source code, 66 DPO/RLHF preference pairs with 100% causal reflection traces, ablation study framework, and ChemCoTBench comparison benchmarks.",
+  "creators": [
+    {
+      "name": "Stepanov, Deyan Nikolaevich",
+      "affiliation": "Tomsk State University"
+    },
+    {
+      "name": "Kundu, Akash",
+      "affiliation": "Independent Researcher"
+    }
+  ],
+  "keywords": [
+    "cheminformatics",
+    "rlhf",
+    "dpo",
+    "multi-agent",
+    "rdkit",
+    "scientific-ai",
+    "instruction-dataset",
+    "molecular-reactions",
+    "preference-pairs"
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "language": "eng",
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/aayushkrm/auto-cheminstruct",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    },
+    {
+      "identifier": "https://huggingface.co/datasets/aayushkrm/autochem-instruct",
+      "relation": "isSupplementTo",
+      "resource_type": "dataset"
+    }
+  ]
+}
