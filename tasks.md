@@ -6,13 +6,13 @@
 - [x] NetworkX installed for chemical knowledge graph
 - [x] LLM provider: Fireworks AI deepseek-v4-pro (OpenAI-compatible)
 - [x] All core imports verified
-- [ ] Initialize git repository, pre-commit hooks
+- [x] Initialize git repository, pre-commit hooks (git init done, pre-commit pending)
 
 ## Phase II: Core Data Models
 - [x] ChemicalEntity, ReactionHypothesis, VerificationResult, ReflectionTrace
 - [x] PreferencePair (chosen/rejected), PipelineStatus, SessionState
 - [x] LearningContext (self-bootstrapping knowledge accumulator)
-- [x] 90/90 unit + integration tests passing
+- [x] 129/129 tests passing (59 unit + 8 integration + 23 RAG + 15 quality + 13 temperature + 11 feasibility)
 
 ## Phase III: Core Modules
 
@@ -79,13 +79,19 @@
 
 ## Phase V: CLI & Interface
 - [x] pipeline: Full pipeline with --bootstrap
+- [x] verify: Resume session and rerun verification
+- [x] reflect: Resume session and rerun reflection
+- [x] compile: Resume session and rerun compilation
+- [x] status: Check session state from checkpoint
 - [x] ablation: 4-variant ablation study
 - [x] chemcot: ChemCoTBench comparison
 - [x] config: Show configuration
 - [x] Rich-formatted summary tables
+- [x] Session listing (--list flag) for all commands
 
 ## Phase VI: Testing & Benchmarking
-- [x] 90/90 tests passing (59 unit + 8 integration + 23 RAG)
+- [x] 129/129 tests passing (59 unit + 8 integration + 23 RAG + 39 quality/feasibility/temperature)
+- [x] Standalone quality scoring module (src/compilation/quality.py)
 - [x] Ablation framework (4 variants, metrics, reporting)
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
@@ -97,8 +103,8 @@
 - [x] Architecture overview (docs/architecture.md)
 - [x] Configuration reference (docs/configuration.md)
 - [x] LaTeX paper scaffold (paper/main.tex + references.bib)
-- [ ] Fill in paper results (ablation data, benchmar ks)
-- [ ] Docker image for reproducibility
+- [~] Fill in paper results (ablation data pending, benchmarks filled)
+- [x] Docker image for reproducibility
 - [ ] HuggingFace dataset upload
 - [ ] arXiv preprint
 - [ ] GitHub release with DOI (Zenodo)

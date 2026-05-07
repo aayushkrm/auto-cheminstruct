@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import sys
 from typing import Optional
+from uuid import UUID
 
 import typer
 from rich.console import Console
@@ -71,34 +72,90 @@ def generate(
 @app.command()
 def verify(
     config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Verify previously generated hypotheses (load from checkpoint)."""
     config = load_config(config_path)
     setup_logging(level=config.logging.level)
 
-    console.print("[yellow]Verification requires an active session. Use 'pipeline' to run the full flow.[/yellow]")
+    if list_sessions:
+        _show_sessions()
+        return
+
+    if not session:
+        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        return
+
+    try:
+        session_id = UUID(session)
+    except ValueError:
+        console.print(f"[red]Invalid session UUID: {session}[/red]")
+        raise typer.Exit(1)
+
+    orch = PipelineOrchestrator(config)
+    results = orch.verify_session(session_id)
+    passed = sum(1 for r in results if r.status.value == "passed")
+    console.print(f"[green]Verification complete: {len(results)} verified, {passed} passed[/green]")
 
 
 @app.command()
 def reflect(
     config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Generate reflection traces for failed reactions."""
     config = load_config(config_path)
     setup_logging(level=config.logging.level)
 
-    console.print("[yellow]Reflection requires an active session. Use 'pipeline' to run the full flow.[/yellow]")
+    if list_sessions:
+        _show_sessions()
+        return
+
+    if not session:
+        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        return
+
+    try:
+        session_id = UUID(session)
+    except ValueError:
+        console.print(f"[red]Invalid session UUID: {session}[/red]")
+        raise typer.Exit(1)
+
+    orch = PipelineOrchestrator(config)
+    traces = orch.reflect_session(session_id)
+    console.print(f"[green]Reflection complete: {len(traces)} traces generated[/green]")
 
 
 @app.command()
 def compile(
     config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Compile verified data into DPO/RLHF preference pairs."""
     config = load_config(config_path)
     setup_logging(level=config.logging.level)
 
-    console.print("[yellow]Compilation requires an active session. Use 'pipeline' to run the full flow.[/yellow]")
+    if list_sessions:
+        _show_sessions()
+        return
+
+    if not session:
+        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        return
+
+    try:
+        session_id = UUID(session)
+    except ValueError:
+        console.print(f"[red]Invalid session UUID: {session}[/red]")
+        raise typer.Exit(1)
+
+    orch = PipelineOrchestrator(config)
+    compilation = orch.compile_session(session_id)
+    pairs = compilation.get("pairs", [])
+    console.print(f"[green]Compilation complete: {len(pairs)} preference pairs[/green]")
 
 
 @app.command()
@@ -231,9 +288,50 @@ def config_cmd(
 @app.command()
 def status(
     session_id: Optional[str] = typer.Option(None, "--session", "-s", help="Session ID to check"),
+    list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Check pipeline status."""
-    console.print("[yellow]Status check requires checkpoint loading. Coming soon.[/yellow]")
+    if list_sessions:
+        _show_sessions()
+        return
+
+    if not session_id:
+        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        return
+
+    try:
+        sid = UUID(session_id)
+    except ValueError:
+        console.print(f"[red]Invalid session UUID: {session_id}[/red]")
+        raise typer.Exit(1)
+
+    config = load_config(None)
+    orch = PipelineOrchestrator(config)
+    try:
+        orch.resume_session(sid)
+        status_val = orch.session.status
+        console.print(f"Session: [cyan]{sid}[/cyan]")
+        console.print(f"Status: [bold]{status_val.value}[/bold]")
+        console.print(f"Hypotheses: {orch.session.hypotheses_generated}")
+        console.print(f"Passed: {orch.session.hypotheses_passed}")
+        console.print(f"Failed: {orch.session.hypotheses_failed}")
+        console.print(f"Pairs: {orch.session.pairs_compiled}")
+    except Exception as e:
+        console.print(f"[red]Failed to load session: {e}[/red]")
+
+
+def _show_sessions() -> None:
+    """Display all available checkpoint sessions."""
+    sessions = PipelineOrchestrator.list_sessions()
+    if not sessions:
+        console.print("[yellow]No saved sessions found.[/yellow]")
+        return
+
+    table = Table(title="Available Sessions")
+    table.add_column("Session ID", style="cyan")
+    for s in sessions:
+        table.add_row(str(s))
+    console.print(table)
 
 
 def main():

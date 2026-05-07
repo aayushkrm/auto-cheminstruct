@@ -306,10 +306,11 @@ class ReflectionAgent:
         learning_context.cumulative_failed += failed
 
         for trace in traces:
-            cat = trace.failure_category.value if hasattr(trace.failure_category, 'value') else str(trace.failure_category)
-            learning_context.failure_categories[cat] = (
-                learning_context.failure_categories.get(cat, 0) + 1
-            )
+            for fc in trace.failure_categories:
+                cat = fc.value if hasattr(fc, "value") else str(fc)
+                learning_context.failure_categories[cat] = (
+                    learning_context.failure_categories.get(cat, 0) + 1
+                )
 
             if trace.causal_explanation:
                 excerpt = trace.causal_explanation[:200].strip()

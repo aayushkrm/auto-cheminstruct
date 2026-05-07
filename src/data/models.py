@@ -4,7 +4,7 @@ All data flowing through the multi-agent system uses these Pydantic models
 for validation, serialization, and type safety.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
@@ -119,7 +119,7 @@ class ReactionHypothesis(BaseModel):
     rationale: Optional[str] = Field(default=None, description="Why this reaction should work")
     prompt_used: Optional[str] = Field(default=None, description="LLM prompt that generated this")
     generation_temperature: Optional[float] = Field(default=None, description="LLM temperature used")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     @field_validator("yield_estimate")
     @classmethod
@@ -181,7 +181,7 @@ class ReflectionTrace(BaseModel):
     fix_suggestion: Optional[str] = Field(default=None, description="How to modify to succeed")
     confidence: float = Field(default=0.5, ge=0.0, le=1.0, description="Confidence in the reflection")
     prompt_used: Optional[str] = Field(default=None)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class PreferencePair(BaseModel):
@@ -197,7 +197,7 @@ class PreferencePair(BaseModel):
     reaction_type: ReactionType = Field(default=ReactionType.OTHER)
     quality_score: float = Field(default=0.5, ge=0.0, le=1.0, description="Pair quality score")
     metadata: dict = Field(default_factory=dict, description="Additional metadata")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class LearningContext(BaseModel):
@@ -275,8 +275,8 @@ class SessionState(BaseModel):
     current_batch: int = Field(default=0)
     total_batches: int = Field(default=0)
     errors: list[str] = Field(default_factory=list)
-    started_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = Field(default=None)
     metadata: dict = Field(default_factory=dict)
 
@@ -290,5 +290,5 @@ class AgentMessage(BaseModel):
     payload: dict = Field(default_factory=dict, description="Message payload")
     session_id: UUID = Field(..., description="Correlation ID")
     hypothesis_id: Optional[UUID] = Field(default=None)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     priority: int = Field(default=3, ge=1, le=5, description="1=highest, 5=lowest")

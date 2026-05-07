@@ -397,7 +397,7 @@ class PipelineOrchestrator:
 
                 # Index reaction template into vector store
                 template = (
-                    f"Reaction: {h.reaction_name} ({h.reaction_type}). "
+                    f"Reaction type: {h.reaction_type.value}. "
                     f"Reactants: {', '.join(reactants)}. "
                     f"Products: {', '.join(products)}. "
                     f"Conditions: {h.conditions}. "
@@ -521,6 +521,56 @@ class PipelineOrchestrator:
         agent.save_dataset(compilation, output_dir)
 
         return compilation
+
+    def verify_session(self, session_id: UUID) -> list[VerificationResult]:
+        """Resume a session and run verification on its hypotheses.
+
+        Requires hypotheses to be already stored in checkpoint.
+        """
+        self.resume_session(session_id)
+        logger.info("Verifying hypotheses from session {}", session_id)
+        self.session.status = PipelineStatus.VERIFYING
+        self._save_checkpoint()
+        results = self._verify_hypotheses([])
+        self._save_checkpoint()
+        return results
+
+    def reflect_session(self, session_id: UUID) -> list[ReflectionTrace]:
+        """Resume a session and run reflection on failed verifications.
+
+        Requires verification results in checkpoint.
+        """
+        self.resume_session(session_id)
+        logger.info("Reflecting on failures from session {}", session_id)
+        self.session.status = PipelineStatus.REFLECTING
+        self._save_checkpoint()
+        traces = self._reflect_on_failures([], [])
+        self._save_checkpoint()
+        return traces
+
+    def compile_session(self, session_id: UUID) -> dict:
+        """Resume a session and compile its results into a dataset."""
+        self.resume_session(session_id)
+        logger.info("Compiling dataset from session {}", session_id)
+        self.session.status = PipelineStatus.COMPILING
+        self._save_checkpoint()
+        compilation = self._compile_dataset([], [], [])
+        self._save_checkpoint()
+        return compilation
+
+    @staticmethod
+    def list_sessions() -> list[UUID]:
+        """List all available checkpoint sessions."""
+        checkpoint_dir = Path(".checkpoints")
+        if not checkpoint_dir.exists():
+            return []
+        sessions: list[UUID] = []
+        for p in checkpoint_dir.glob("*.db"):
+            try:
+                sessions.append(UUID(p.stem))
+            except ValueError:
+                continue
+        return sorted(sessions)
 
     def _init_checkpoint(self) -> None:
         """Initialize the checkpoint database for this session."""
