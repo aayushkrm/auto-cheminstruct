@@ -16,11 +16,11 @@ dist/
 build/
 
 # Data
-logs/
-.checkpoints/
-datasets/
-benchmarks/
-.chromadb/
+/logs/
+/.checkpoints/
+/datasets/
+/benchmarks/
+/.chromadb/
 
 # Env
 .env
