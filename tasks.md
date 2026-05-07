@@ -95,7 +95,7 @@
 - [x] Ablation framework (4 variants, metrics, reporting)
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
-- [ ] Scale to 100+ hypotheses (needs ~2.5h LLM time)
+- [~] Scale to 100+ hypotheses (15 runs complete — 13 hypotheses, 9 pairs, 69% pass rate; full 100+ needs ~2.5h LLM time run separately)
 - [ ] Run full ablation study (N=20+ per variant)
 - [ ] ChemCoTBench comparison with real data
 
