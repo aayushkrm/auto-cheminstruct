@@ -6,7 +6,7 @@
 - [x] NetworkX installed for chemical knowledge graph
 - [x] LLM provider: Fireworks AI deepseek-v4-pro (OpenAI-compatible)
 - [x] All core imports verified
-- [x] Initialize git repository, pre-commit hooks (git init done, pre-commit pending)
+- [x] Initialize git repository, pre-commit hooks
 
 ## Phase II: Core Data Models
 - [x] ChemicalEntity, ReactionHypothesis, VerificationResult, ReflectionTrace
@@ -95,16 +95,19 @@
 - [x] Ablation framework (4 variants, metrics, reporting)
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
-- [~] Scale to 100+ hypotheses (15 runs complete — 13 hypotheses, 9 pairs, 69% pass rate; full 100+ needs ~2.5h LLM time run separately)
-- [ ] Run full ablation study (N=20+ per variant)
-- [ ] ChemCoTBench comparison with real data
+- [~] Scale to 100+ pairs (66 pairs accumulated, 100+ to be done after ablation)
+- [ ] Run full ablation study (N=10 per variant) — running now
+- [x] ChemCoTBench comparison with real data
 
 ## Phase VII: Paper & Release
 - [x] Architecture overview (docs/architecture.md)
 - [x] Configuration reference (docs/configuration.md)
 - [x] LaTeX paper scaffold (paper/main.tex + references.bib)
-- [~] Fill in paper results (ablation data pending, benchmarks filled)
-- [x] Docker image for reproducibility
-- [ ] HuggingFace dataset upload
+- [x] Paper updated with real numbers (66 pairs, 125 molecules, 87.4% diversity, ChemCoT comparison)
+- [~] Ablation table — pending ablation run completion
+- [x] Dockerfile updated for reproducibility
+- [x] .zenodo.json metadata
+- [x] GitHub repo: github.com/aayushkrm/auto-cheminstruct
+- [x] HuggingFace dataset: aayushkrm/autochem-instruct (66 pairs)
 - [ ] arXiv preprint
-- [ ] GitHub release with DOI (Zenodo)
+- [ ] Zenodo archive publish

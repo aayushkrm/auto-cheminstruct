@@ -15,7 +15,7 @@ class LLMConfig(BaseModel):
     """Single-provider LLM configuration via Fireworks AI (OpenAI-compatible)."""
 
     provider: str = "fireworks"
-    model: str = "accounts/fireworks/models/deepseek-v4-pro"
+    model: str = "accounts/fireworks/models/deepseek-v3p2"
     base_url: str = "https://api.fireworks.ai/inference/v1"
     api_key: Optional[str] = None
     temperature: float = 0.8

@@ -1,5 +1,5 @@
 # Auto-ChemInstruct Default Configuration
-# Fireworks AI (OpenAI-compatible) — deepseek-v4-pro reasoning model
+# Fireworks AI (OpenAI-compatible) — deepseek-v3p2
 
 pipeline:
   batch_size: 1
@@ -15,9 +15,9 @@ pipeline:
 
 llm:
   provider: fireworks
-  model: accounts/fireworks/models/deepseek-v4-pro
+  model: accounts/fireworks/models/deepseek-v3p2
   base_url: https://api.fireworks.ai/inference/v1
-  api_key: fw_LKEynq4Sxf7G1PYFGWRx4t
+  api_key: fw_CTwhwhvf1SJHJicQAi2CCc
   temperature: 0.8
   max_tokens: 4096
   request_timeout: 180

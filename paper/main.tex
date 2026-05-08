@@ -115,7 +115,7 @@ Our retrieval system combines ChromaDB vector search with a NetworkX chemical kn
 
 \subsection{Implementation}
 \begin{itemize}
-    \item \textbf{LLM}: Fireworks AI deepseek-v4-pro (reasoning model), accessed via OpenAI-compatible API
+    \item \textbf{LLM}: Fireworks AI deepseek-v3p2, accessed via OpenAI-compatible API
     \item \textbf{Chemistry}: RDKit 2024 for structural validation; xTB 6.7 for semi-empirical QM (code-complete, pending binary)
     \item \textbf{Infrastructure}: Python 3.13, Pydantic v2, ChromaDB, NetworkX
     \item \textbf{Config}: Single-hypothesis prompts (reasoning model optimized for focused tasks), cosine temperature schedule

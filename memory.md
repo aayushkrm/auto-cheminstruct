@@ -5,37 +5,62 @@
 - **Full Title**: Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models
 - **Domain**: AI Cheminformatics, Multi-Agent Systems, RAG
 - **Publication Target**: NeurIPS Datasets & Benchmarks Track
+- **GitHub**: github.com/aayushkrm/auto-cheminstruct
+- **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct
 
-## Status: CODE-COMPLETE — Ready for scale-up + paper writing
+## Status: PRODUCTION-READY — Ablation pending, paper near-complete
+
+## LLM Provider
+- **Fireworks AI**: model `accounts/fireworks/models/deepseek-v3p2` (switched from deepseek-v4-pro on 2026-05-08)
+- Base URL: `https://api.fireworks.ai/inference/v1`
+- Config: `configs/default.yaml`
 
 ## Repository Structure
 ```
 auto-cheminstruct/
-├── AGENTS.md, memory.md, tasks.md   # Documentation
+├── AGENTS.md, memory.md, tasks.md   # Project documentation
 ├── pyproject.toml                   # uv-managed deps
 ├── configs/default.yaml             # Fireworks AI + scheduler config
+├── .pre-commit-config.yaml          # Pre-commit hooks (ruff, mypy)
+├── .zenodo.json                     # Zenodo DOI metadata
+├── Dockerfile                       # Reproducibility
 ├── docs/
 │   ├── architecture.md              # Full system design
 │   └── configuration.md             # Config reference
 ├── paper/
-│   ├── main.tex                     # NeurIPS LaTeX scaffold
+│   ├── main.tex                     # NeurIPS LaTeX (filled with 66-pair stats)
 │   └── references.bib               # Bibliography
-├── benchmarks/                      # Ablation + comparison outputs
-├── tests/                           # 90 tests (5 test files)
-│   └── test_rag.py                  # 23 RAG tests
+├── benchmarks/                      # Ablation + ChemCoT comparison outputs
+├── tests/                           # 129 tests (9 test files)
+│   ├── test_models.py (20)          # Core data models
+│   ├── test_agents.py (18)          # Agent logic
+│   ├── test_chemistry.py (17)       # RDKit, feasibility
+│   ├── test_rag.py (23)             # RAG + knowledge graph
+│   ├── test_config.py (4)           # Config loading
+│   ├── test_integration.py (8)      # End-to-end pipeline
+│   ├── test_temperature.py (13)     # Temperature scheduling
+│   ├── test_feasibility.py (13)     # Chemical feasibility filter
+│   └── test_quality.py (13)         # Quality scoring module
 ├── src/
-│   ├── agents/                      # 4 agents (hypothesis, verify, reflect, compile)
+│   ├── agents/                      # 4 agents
+│   │   ├── hypothesis_agent.py
+│   │   ├── verification_agent.py
+│   │   ├── reflection_agent.py
+│   │   └── compilation_agent.py
 │   ├── pipeline/orchestrator.py     # Self-bootstrapping coordinator
 │   ├── rag/chemical_rag.py          # Multi-hop RAG + knowledge graph
 │   ├── chemistry/                   # RDKit, xTB, diversity, feasibility
 │   ├── benchmarks/                  # Ablation + ChemCoT comparison
+│   │   ├── ablation.py
+│   │   └── chemcot_comparison.py
+│   ├── compilation/quality.py       # Standalone quality scoring module
 │   ├── data/models.py               # All Pydantic models
 │   ├── config.py                    # OmegaConf + Pydantic config
 │   ├── utils/
 │   │   ├── llm_factory.py
 │   │   └── temperature_scheduler.py
-│   └── cli/main.py                  # Typer CLI (pipeline, ablation, chemcot, config)
-└── datasets/                        # JSONL + HuggingFace output
+│   └── cli/main.py                  # Typer CLI (all commands functional)
+└── datasets/                        # Local JSONL output (gitignored)
 ```
 
 ## Implemented Innovations
@@ -43,51 +68,67 @@ auto-cheminstruct/
 ### 1. Self-Bootstrapping Reflection Loop
 - `LearningContext` accumulates failure patterns across bootstrap iterations
 - Causal reflection traces analyzed → constraints injected into hypothesis prompt
-- Pipeline: Generate → Verify → Reflect → Accumulate → Repeat (with learned constraints)
+- Pipeline: Generate → Verify → Reflect → Accumulate → Repeat
 - CLI: `-B N` flag for bootstrap iterations
 
 ### 2. Temperature Scheduling
 - Cosine annealing (1.0→0.3) across bootstrap iterations
 - Configurable: cosine, linear, exponential schedules
-- Exploration (high temp) → Exploitation (low temp) as learning accumulates
+- Exploration (high temp) → Exploitation (low temp)
 
 ### 3. Multi-Hop Chemical RAG
 - ChromaDB vector store + NetworkX chemical knowledge graph
 - Typed edges: reactant_of, product_of, has_scaffold, contains_group
-- Multi-hop retrieval: extract SMILES → formulate query → repeat
-- Scaffold indexing (Murcko decomposition) + functional group detection (SMARTS)
-- Wired into orchestrator for prompt enrichment and post-verification indexing
+- Multi-hop retrieval with query decomposition
+- Scaffold indexing (Murcko) + functional group detection (SMARTS)
 
 ### 4. Chemical Feasibility Filter
-- Unstable group detection (peroxides, azides, diazo)
+- Unstable group detection (peroxides, azides, diazo, acid chlorides, sulfonyl chlorides)
 - Hypervalent atom checks, ring strain analysis
-- Atom count limits, heavy atom detection
+- Atom count limits
 
-### 5. Enhanced Preference Pair Quality Scoring
-- 6 chemistry-aware dimensions: structural validity, QED, reflection depth, yield, scaffold diversity, reaction specificity
+### 5. Enhanced Quality Scoring
+- 6 chemistry-aware dimensions
+- Standalone module: `src/compilation/quality.py`
 - Weighted composite score (0-1)
 
 ## Test Coverage
-- **90/90 passing** (59 unit + 8 integration + 23 RAG)
+- **129/129 passing** (59 unit + 8 integration + 23 RAG + 39 quality/feasibility/temperature)
 - No failures, 0 skipped
 
-## CLI Commands
+## CLI Commands (All Functional)
 ```bash
-pipeline -n N -B M      # Run pipeline with bootstrap
-ablation -n N -o DIR    # 4-variant ablation study
-chemcot -d DIR -o FILE  # ChemCoTBench comparison
-config                  # Show current configuration
+pipeline -n N -b BATCH -B BOOTSTRAP  # Full pipeline
+verify -s SESSION_ID --list          # Verify from checkpoint
+reflect -s SESSION_ID --list         # Reflect from checkpoint
+compile -s SESSION_ID --list         # Compile from checkpoint
+status -s SESSION_ID --list          # Session status
+ablation -n N -o DIR                 # 4-variant ablation
+chemcot -d DIR -o FILE               # ChemCoTBench comparison
+config                               # Show configuration
 ```
 
+## Dataset
+- **HuggingFace**: `aayushkrm/autochem-instruct` — 66 pairs (51 train, 6 val, 9 test)
+- 125 unique molecules, 87.4% Tanimoto diversity, 34.4% scaffold diversity
+- 100% causal reflection coverage, avg quality score 0.596
+
+## Bugs Fixed
+- reflection_agent: `trace.failure_category` → iterate `failure_categories` list
+- orchestrator: `h.reaction_name` → `h.reaction_type.value`
+- models.py: `datetime.utcnow()` → `datetime.now(timezone.utc)`
+- ablation.py: PreferencePair `.get()` → `getattr()` (Pydantic model, not dict)
+- .gitignore: `benchmarks/` → `/benchmarks/` (was blocking src/benchmarks/)
+
 ## Key Decisions Log
-- Fireworks AI deepseek-v4-pro (reasoning model) — batch_size=1 optimal
+- 2026-05-08: Switched LLM from deepseek-v4-pro to deepseek-v3p2 (Fireworks billing)
 - Cosine temperature scheduling — paper's exploration-exploitation mechanism
 - NetworkX for chemical knowledge graph — lightweight, no external DB needed
 - RDKit-only validation active; xTB code-complete, pending binary
 
-## Next Steps
-1. Scale to 100+ hypotheses (needs ~2.5 hours of LLM calls)
-2. Run full ablation study with N=20+ per variant
-3. Fill paper results with real ablation data
-4. Install xTB binary for energetic validation
-5. Docker image + HuggingFace upload + arXiv preprint
+## Next Steps (Priority Order)
+1. Rerun ablation study with fixed code + new API key
+2. Fill ablation table in paper with real numbers
+3. arXiv preprint upload
+4. Zenodo archive publish (drag .zip after ablation data)
+5. Scale dataset to 100+ pairs
