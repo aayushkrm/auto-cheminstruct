@@ -220,6 +220,8 @@ def run_ablation_variant(
     num_hypotheses: int,
     bootstrap_iterations: int = 1,
     temperature_schedule: str | None = None,
+    disable_rag: bool = False,
+    disable_reflection: bool = False,
     description: str = "",
 ) -> AblationResult:
     """Run a single ablation variant.
@@ -238,12 +240,18 @@ def run_ablation_variant(
     if temperature_schedule is not None:
         cfg.pipeline.temperature_schedule = temperature_schedule
     cfg.pipeline.bootstrap_iterations = bootstrap_iterations
+    if disable_rag:
+        cfg.rag.enabled = False
+    if disable_reflection:
+        cfg.pipeline.bootstrap_iterations = 1  # No bootstrap = no reflection
 
     logger.info(
-        "Ablation variant '{}': bootstrap={}, schedule={}",
+        "Ablation variant '{}': bootstrap={}, schedule={}, rag={}, reflection={}",
         variant_name,
         bootstrap_iterations,
         temperature_schedule or "fixed",
+        not disable_rag,
+        not disable_reflection,
     )
 
     start = time.time()
@@ -253,6 +261,7 @@ def run_ablation_variant(
         result = orch.run_pipeline(
             num_hypotheses=num_hypotheses,
             bootstrap_iterations=bootstrap_iterations,
+            skip_reflection=disable_reflection,
         )
 
         metrics = _compute_result_metrics(result)
@@ -313,18 +322,22 @@ def run_full_ablation(
 ) -> AblationReport:
     """Run all ablation variants and compile comparative report.
 
-    Variants:
-        1. Baseline: no bootstrap, fixed temperature (0.8)
-        2. Bootstrap-only: 3 iterations, fixed temperature
-        3. Temperature-only: no bootstrap, cosine schedule
-        4. Full system: 3 bootstrap iterations + cosine schedule
+    Variants (NeurIPS-style component ablation):
+        1. Full-System: bootstrap + temperature + RAG + reflection
+        2. No-Bootstrap: fixed temp, no learning feedback loop
+        3. No-Reflection: no causal traces, verify only (pass/fail)
+        4. No-RAG: full pipeline without retrieval augmentation
     """
     report = AblationReport(num_hypotheses=num_hypotheses)
     variants = [
-        ("Baseline", 1, None, "No bootstrap, fixed temperature=0.8"),
-        ("Bootstrap-Only", 3, None, "3 bootstrap iterations, fixed temperature=0.8"),
-        ("Temp-Schedule-Only", 1, "cosine", "No bootstrap, cosine annealing 1.0→0.3"),
-        ("Full-System", 3, "cosine", "3 bootstrap iterations + cosine annealing"),
+        ("Full-System", 3, "cosine", False, False,
+         "3 bootstrap iterations + cosine annealing + RAG + reflection"),
+        ("No-Bootstrap", 1, None, False, False,
+         "No bootstrap, fixed temperature=0.8, RAG + reflection active"),
+        ("No-Reflection", 3, "cosine", False, True,
+         "Bootstrap + cosine, RAG active, no causal reflection"),
+        ("No-RAG", 3, "cosine", True, False,
+         "Bootstrap + cosine + reflection, RAG disabled"),
     ]
 
     logger.info(
@@ -333,7 +346,7 @@ def run_full_ablation(
         num_hypotheses,
     )
 
-    for variant_name, bootstrap_iters, temp_schedule, description in variants:
+    for variant_name, bootstrap_iters, temp_schedule, no_rag, no_refl, desc in variants:
         logger.info("--- Ablation: {} ---", variant_name)
         result = run_ablation_variant(
             config=config,
@@ -341,7 +354,9 @@ def run_full_ablation(
             num_hypotheses=num_hypotheses,
             bootstrap_iterations=bootstrap_iters,
             temperature_schedule=temp_schedule,
-            description=description,
+            disable_rag=no_rag,
+            disable_reflection=no_refl,
+            description=desc,
         )
         report.add_variant(result)
 

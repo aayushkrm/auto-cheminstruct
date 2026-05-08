@@ -43,8 +43,14 @@ class GeneratedReaction(BaseModel):
 
 SYSTEM_PROMPT = """You are an expert synthetic organic chemist. Generate diverse, creative, and chemically plausible reaction hypotheses.
 
+IMPORTANT: You MUST specify the reaction_type using one of these EXACT names:
+- esterification, amide_coupling, diels_alder, suzuki_coupling, wittig
+- grignard, aldol_condensation, michael_addition, heck_reaction
+- oxidation, reduction, hydrolysis, friedel_crafts, nucleophilic_substitution
+- elimination, claisen_rearrangement, mannich, buchwald_hartwig, click_chemistry
+
 Output ONLY a valid JSON object with these fields:
-- reaction_type (string): type of reaction (e.g. esterification, Diels-Alder, Suzuki coupling)
+- reaction_type (string): EXACT name from the list above
 - reactant_smiles (array of strings): SMILES strings for all reactants
 - product_smiles (array of strings): SMILES strings for all products  
 - solvent (string or null): reaction solvent if applicable
@@ -58,14 +64,36 @@ Output ONLY a valid JSON object with these fields:
 No markdown, no commentary — ONLY JSON."""
 
 USER_PROMPT_TEMPLATES = [
-    "Generate {n} novel {reaction_type} reactions using diverse substrates.",
-    "Propose {n} creative synthetic transformations involving {functional_group} chemistry.",
-    "Design {n} {reaction_type} reactions that would be useful in pharmaceutical synthesis.",
-    "Generate {n} reactions converting {start_material} derivatives to {target_class} compounds.",
-    "Propose {n} novel {reaction_type} reactions under {condition_type} conditions.",
-    "Create {n} {reaction_type} reactions that exploit {principle} for selectivity.",
-    "Design {n} synthetic routes using {reagent_class} reagents.",
+    "Generate {n} novel {reaction_type} reactions using diverse aromatic substrates.",
+    "Propose {n} creative {reaction_type} reactions involving {functional_group} chemistry.",
+    "Design {n} {reaction_type} reactions useful in pharmaceutical synthesis.",
+    "Generate {n} {reaction_type} reactions converting {start_material} derivatives to {target_class} compounds.",
+    "Propose {n} {reaction_type} reactions under {condition_type} conditions.",
+    "Create {n} {reaction_type} reactions exploiting {principle} for selectivity.",
+    "Design {n} synthetic routes using {reaction_type} with {reagent_class} reagents.",
     "Generate {n} {reaction_type} reactions featuring {feature}.",
+]
+
+REACTION_TYPE_POOL = [
+    "esterification",
+    "amide_coupling",
+    "diels_alder",
+    "suzuki_coupling",
+    "wittig",
+    "grignard",
+    "aldol_condensation",
+    "michael_addition",
+    "heck_reaction",
+    "oxidation",
+    "reduction",
+    "hydrolysis",
+    "friedel_crafts",
+    "nucleophilic_substitution",
+    "elimination",
+    "claisen_rearrangement",
+    "mannich",
+    "buchwald_hartwig",
+    "click_chemistry",
 ]
 
 
@@ -151,7 +179,8 @@ class HypothesisGenerationAgent:
         else:
             template_idx = self._prompt_index % len(USER_PROMPT_TEMPLATES)
             self._prompt_index += 1
-            rt = reaction_type.value if reaction_type else "organic"
+            # Cycle through specific reaction types for diversity
+            rt = reaction_type.value if reaction_type else REACTION_TYPE_POOL[self._prompt_index % len(REACTION_TYPE_POOL)]
             user_prompt = USER_PROMPT_TEMPLATES[template_idx].format(
                 n=n,
                 reaction_type=rt.replace("_", " "),
@@ -263,7 +292,7 @@ class HypothesisGenerationAgent:
         ]
 
         try:
-            reaction_type = ReactionType(generated.reaction_type.lower().replace(" ", "_"))
+            reaction_type = _parse_reaction_type(generated.reaction_type)
         except ValueError:
             reaction_type = ReactionType.OTHER
 
@@ -301,3 +330,67 @@ def _all_smiles_valid(hypothesis: ReactionHypothesis) -> bool:
         if not validate_smiles_syntax(mol.smiles):
             return False
     return True
+
+
+def _parse_reaction_type(raw: str) -> ReactionType:
+    """Parse LLM-generated reaction type string into ReactionType enum.
+
+    Handles common variations: 'Diels-Alder' → DIELS_ALDER,
+    'Suzuki coupling' → SUZUKI_COUPLING, etc.
+    """
+    normalized = raw.lower().strip().replace(" ", "_").replace("-", "_").replace("/", "_")
+
+    # Direct mapping for common LLM variations
+    aliases = {
+        "diels_alder": "diels_alder",
+        "diels_alder_reaction": "diels_alder",
+        "suzuki_coupling": "suzuki_coupling",
+        "suzuki": "suzuki_coupling",
+        "suzuki_miyaura": "suzuki_coupling",
+        "heck": "heck_reaction",
+        "heck_coupling": "heck_reaction",
+        "mizoroki_heck": "heck_reaction",
+        "grignard": "grignard",
+        "grignard_reaction": "grignard",
+        "grignard_addition": "grignard",
+        "wittig": "wittig",
+        "wittig_reaction": "wittig",
+        "friedel_crafts": "friedel_crafts",
+        "friedel_crafts_acylation": "friedel_crafts",
+        "friedel_crafts_alkylation": "friedel_crafts",
+        "aldol": "aldol_condensation",
+        "aldol_reaction": "aldol_condensation",
+        "michael_addition": "michael_addition",
+        "michael": "michael_addition",
+        "amide_bond_formation": "amide_coupling",
+        "peptide_coupling": "amide_coupling",
+        "amide_synthesis": "amide_coupling",
+        "sn2": "nucleophilic_substitution",
+        "sn1": "nucleophilic_substitution",
+        "substitution": "nucleophilic_substitution",
+        "nucleophilic": "nucleophilic_substitution",
+        "esterification": "esterification",
+        "ester_synthesis": "esterification",
+        "oxidation": "oxidation",
+        "reduction": "reduction",
+        "hydrolysis": "hydrolysis",
+        "elimination": "elimination",
+        "mannich": "mannich",
+        "mannich_reaction": "mannich",
+        "buchwald": "buchwald_hartwig",
+        "buchwald_hartwig": "buchwald_hartwig",
+        "click": "click_chemistry",
+        "click_chemistry": "click_chemistry",
+        "claisen": "claisen_rearrangement",
+        "claisen_rearrangement": "claisen_rearrangement",
+        "williamson_ether_synthesis": "nucleophilic_substitution",
+    }
+
+    mapped = aliases.get(normalized)
+    if mapped:
+        return ReactionType(mapped)
+
+    try:
+        return ReactionType(normalized)
+    except ValueError:
+        return ReactionType.OTHER

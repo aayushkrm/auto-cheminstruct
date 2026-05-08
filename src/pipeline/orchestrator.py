@@ -149,6 +149,7 @@ class PipelineOrchestrator:
         num_hypotheses: int = 100,
         seed_prompts: list[str] | None = None,
         bootstrap_iterations: int = 1,
+        skip_reflection: bool = False,
     ) -> dict:
         """Execute the full Auto-ChemInstruct pipeline with self-bootstrapping.
 
@@ -253,7 +254,7 @@ class PipelineOrchestrator:
                 if r.status == VerificationStatus.FAILED
             ]
 
-            if failed_hypotheses:
+            if failed_hypotheses and not skip_reflection:
                 self.session.status = PipelineStatus.REFLECTING
                 self._save_checkpoint()
 
@@ -392,26 +393,8 @@ class PipelineOrchestrator:
 
         try:
             for h, r in passed:
-                reactants = [e.smiles for e in h.reactants]
-                products = [e.smiles for e in h.products]
-
-                # Index reaction template into vector store
-                template = (
-                    f"Reaction type: {h.reaction_type.value}. "
-                    f"Reactants: {', '.join(reactants)}. "
-                    f"Products: {', '.join(products)}. "
-                    f"Conditions: {h.conditions}. "
-                    f"Rationale: {h.rationale}"
-                )
-                self.rag.index_reaction_templates([template])
-
-                # Build knowledge graph edges
-                self.rag.index_reaction_graph(reactants, products, h.reaction_type)
-
-                # Index scaffold relations
-                all_smiles = reactants + products
-                self.rag.index_scaffold_relations(all_smiles)
-                self.rag.index_functional_groups(all_smiles)
+                self.rag.index_reaction(h, r)
+                self.rag._save_state()
 
             logger.debug("Indexed {} passed hypotheses into RAG", len(passed))
         except Exception as e:
