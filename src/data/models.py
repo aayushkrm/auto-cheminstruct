@@ -15,12 +15,30 @@ from pydantic import BaseModel, Field, field_validator
 class ReactionType(str, Enum):
     """Classification of chemical reaction types."""
 
+    # Named/specific reaction types (preferred for diversity)
+    ESTERIFICATION = "esterification"
+    AMIDE_COUPLING = "amide_coupling"
+    DIELS_ALDER = "diels_alder"
+    SUZUKI_COUPLING = "suzuki_coupling"
+    WITTIG = "wittig"
+    GRIGNARD = "grignard"
+    ALDOL_CONDENSATION = "aldol_condensation"
+    MICHAEL_ADDITION = "michael_addition"
+    HECK_REACTION = "heck_reaction"
+    FRIEDEL_CRAFTS = "friedel_crafts"
+    CLAISEN_REARRANGEMENT = "claisen_rearrangement"
+    MANNICH = "mannich"
+    BUCHWALD_HARTWIG = "buchwald_hartwig"
+    CLICK_CHEMISTRY = "click_chemistry"
+
+    # Broad categories (fallback)
     NUCLEOPHILIC_SUBSTITUTION = "nucleophilic_substitution"
     ELECTROPHILIC_ADDITION = "electrophilic_addition"
     ELIMINATION = "elimination"
     CONDENSATION = "condensation"
     OXIDATION = "oxidation"
     REDUCTION = "reduction"
+    HYDROLYSIS = "hydrolysis"
     CYCLOADDITION = "cycloaddition"
     REARRANGEMENT = "rearrangement"
     CROSS_COUPLING = "cross_coupling"

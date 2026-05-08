@@ -347,6 +347,7 @@ def _parse_reaction_type(raw: str) -> ReactionType:
         "suzuki_coupling": "suzuki_coupling",
         "suzuki": "suzuki_coupling",
         "suzuki_miyaura": "suzuki_coupling",
+        "suzuki_cross_coupling": "suzuki_coupling",
         "heck": "heck_reaction",
         "heck_coupling": "heck_reaction",
         "mizoroki_heck": "heck_reaction",

@@ -99,9 +99,11 @@ class TestVerificationAgent:
         assert all(r.smiles_valid for r in results)
 
     def test_xtb_disabled(self, sample_hypothesis):
+        """xTB disabled → MMFF94 fallback computes real energies."""
         agent = VerificationAgent(enable_xtb=False)
         result = agent.verify(sample_hypothesis)
-        assert result.computed_properties.total_energy_hartree is None
+        # MMFF94 fallback computes real energies even without xTB
+        assert result.computed_properties.total_energy_hartree is not None
 
 
 class TestReflectionAgent:
