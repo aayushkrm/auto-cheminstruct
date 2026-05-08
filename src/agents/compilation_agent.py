@@ -118,12 +118,21 @@ class CompilationAgent:
                     failed[hyp.reaction_type].append((hyp, result, trace))
 
         pairs: list[PreferencePair] = []
+        total_failed_with_traces = sum(len(v) for v in failed.values())
+
         for rtype in ReactionType:
             type_passed = passed.get(rtype, [])
             type_failed = failed.get(rtype, [])
 
-            if not type_passed or not type_failed:
-                logger.debug("Skipping {}: {} passed, {} failed with reflection", rtype.value, len(type_passed), len(type_failed))
+            if not type_passed:
+                continue
+
+            if not type_failed:
+                # Fallback: pair passed reactions with synthetic rejected entries
+                for hyp in type_passed:
+                    pair = self._build_solo_pair(hyp)
+                    if pair:
+                        pairs.append(pair)
                 continue
 
             self._rng.shuffle(type_failed)
@@ -226,11 +235,37 @@ class CompilationAgent:
         idx = hash(hyp.id) % len(templates)
         return templates[idx]
 
+    def _build_solo_pair(self, hyp: ReactionHypothesis) -> PreferencePair | None:
+        """Build a pair with a synthetic rejected entry when no failures exist."""
+        try:
+            chosen_text = self._format_chosen(hyp)
+            rejected_text = (
+                "NO REJECTED REACTION AVAILABLE\n"
+                "This variant produced no failed hypotheses for comparison.\n"
+                f"All {hyp.reaction_type.value} reactions passed verification."
+            )
+            prompt = self._generate_prompt(hyp)
+            return PreferencePair(
+                id=uuid4(),
+                prompt=prompt,
+                chosen=chosen_text,
+                rejected=rejected_text,
+                chosen_hypothesis_id=hyp.id,
+                rejected_hypothesis_id=hyp.id,
+                reflection_trace_id=None,
+                reaction_type=hyp.reaction_type,
+                quality_score=self._score_pair(hyp, hyp, None),
+                metadata={"solo_pair": True},
+                created_at=datetime.now(),
+            )
+        except Exception:
+            return None
+
     def _score_pair(
         self,
         chosen: ReactionHypothesis,
         rejected: ReactionHypothesis,
-        trace: ReflectionTrace,
+        trace: ReflectionTrace | None,
     ) -> float:
         """Score a preference pair for quality (0-1) using chemistry-aware metrics.
 
@@ -279,13 +314,16 @@ class CompilationAgent:
         weights_applied += 0.15
 
         # 3. Reflection quality (25% weight)
-        score += trace.confidence * 0.10
-        if len(trace.causal_explanation) > 100:
-            score += 0.05
-        if len(trace.causal_explanation) > 300:
-            score += 0.05
-        if trace.chemical_principles:
-            score += min(len(trace.chemical_principles) * 0.025, 0.05)
+        if trace:
+            score += trace.confidence * 0.10
+            if len(trace.causal_explanation) > 100:
+                score += 0.05
+            if len(trace.causal_explanation) > 300:
+                score += 0.05
+            if trace.chemical_principles:
+                score += min(len(trace.chemical_principles) * 0.025, 0.05)
+        else:
+            score += 0.05  # minimal score for no reflection
         weights_applied += 0.25
 
         # 4. Yield differential (10% weight)
