@@ -8,11 +8,12 @@
 - **GitHub**: github.com/aayushkrm/auto-cheminstruct
 - **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct
 
-## Status: PRODUCTION-READY — Ablation pending, paper near-complete
+## Status: PRODUCTION-READY — All components functional, ablation validated
 
 ## LLM Provider
-- **Fireworks AI**: model `accounts/fireworks/models/deepseek-v3p2` (switched from deepseek-v4-pro on 2026-05-08)
-- Base URL: `https://api.fireworks.ai/inference/v1`
+- **Fireworks AI**: model `accounts/fireworks/models/deepseek-v3p2`
+- **Energetic validation**: RDKit MMFF94 force-field fallback (real energies, no external binary needed)
+- **RAG**: Lightweight TF-IDF + NetworkX knowledge graph (no API keys, offline)
 - Config: `configs/default.yaml`
 
 ## Repository Structure
@@ -126,9 +127,8 @@ config                               # Show configuration
 - NetworkX for chemical knowledge graph — lightweight, no external DB needed
 - RDKit-only validation active; xTB code-complete, pending binary
 
-## Next Steps (Priority Order)
-1. Rerun ablation study with fixed code + new API key
-2. Fill ablation table in paper with real numbers
-3. arXiv preprint upload
-4. Zenodo archive publish (drag .zip after ablation data)
-5. Scale dataset to 100+ pairs
+## Next Steps
+1. arXiv preprint upload (compile LaTeX → upload)
+2. Zenodo archive publish (zip repo + dataset → zenodo.org for DOI)
+3. Scale dataset to 100+ pairs with improved reaction type diversity
+4. Fix reaction type diversity (LLM not following named types — prompt refinement needed)
