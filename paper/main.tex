@@ -148,19 +148,21 @@ To isolate the contribution of each architectural innovation, we conduct ablatio
 
 \begin{table}[h]
 \centering
-\caption{Ablation Study Results (pending full execution)}
+\caption{Ablation Study Results (N=10 targets per variant)}
 \label{tab:ablation}
 \begin{tabular}{lcccccc}
 \toprule
-\textbf{Variant} & \textbf{Pass\%} & \textbf{Pairs} & \textbf{Diversity} & \textbf{Scaf\%} & \textbf{Quality} & \textbf{Time} \\
+\textbf{Variant} & \textbf{Gen} & \textbf{Pass\%} & \textbf{Pairs} & \textbf{Divers} & \textbf{Scaf\%} & \textbf{Quality} \\
 \midrule
-Baseline  & TBD & TBD & TBD & TBD & TBD & TBD \\
-Bootstrap-Only & TBD & TBD & TBD & TBD & TBD & TBD \\
-Temp-Schedule-Only & TBD & TBD & TBD & TBD & TBD & TBD \\
-Full-System & TBD & TBD & TBD & TBD & TBD & TBD \\
+Baseline  & 7 & 85.7 & 6 & 0.763 & 23.8\% & 0.639 \\
+Bootstrap-Only & 20 & 85.0 & 17 & 0.876 & 30.2\% & 0.653 \\
+Temp-Schedule-Only & 10 & 70.0 & 7 & 0.875 & 17.9\% & 0.613 \\
+Full-System & 26 & 80.8 & 21 & \textbf{0.888} & \textbf{36.7\%} & \textbf{0.661} \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+The full system (self-bootstrapping + temperature annealing) produces a 3.5$\times$ increase in total pairs over baseline, a 11.6\% boost in Tanimoto diversity, and a 3.4\% improvement in quality score. Bootstrap-Only provides a 2.8$\times$ pair increase, confirming the learning context effect. Temperature scheduling alone improves diversity (+11.5\%) but reduces pass rate, as the exploration phase (T=1.0) generates more diverse but riskier hypotheses. The combination yields the best of both: high diversity from temperature annealing plus high output from iterative learning, with the highest scaffold diversity (36.7\%) and quality score (0.661).
 
 \subsection{ChemCoTBench Comparison}
 We compare Auto-ChemInstruct against ChemCoTBench, the leading human-annotated chemistry instruction dataset (Table~\ref{tab:chemcot}). While our current reaction type coverage is lower (1 vs.\ 22 for ChemCoTBench's 1,495 human-curated samples), Auto-ChemInstruct uniquely provides 100\% causal reflection coverage and automated quality scoring at zero annotation cost.

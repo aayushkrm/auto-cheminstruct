@@ -96,7 +96,7 @@
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
 - [~] Scale to 100+ pairs (66 pairs accumulated, 100+ to be done after ablation)
-- [ ] Run full ablation study (N=10 per variant) — running now
+- [x] Run full ablation study (N=10 per variant)
 - [x] ChemCoTBench comparison with real data
 
 ## Phase VII: Paper & Release
@@ -104,7 +104,7 @@
 - [x] Configuration reference (docs/configuration.md)
 - [x] LaTeX paper scaffold (paper/main.tex + references.bib)
 - [x] Paper updated with real numbers (66 pairs, 125 molecules, 87.4% diversity, ChemCoT comparison)
-- [~] Ablation table — pending ablation run completion
+- [x] Ablation table filled (3.5x pairs, +11.6% diversity, +3.4% quality for Full-System)
 - [x] Dockerfile updated for reproducibility
 - [x] .zenodo.json metadata
 - [x] GitHub repo: github.com/aayushkrm/auto-cheminstruct
