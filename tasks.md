@@ -96,7 +96,10 @@
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
 - [~] Scale to 100+ pairs (66 pairs accumulated, 100+ to be done after ablation)
-- [x] Run full ablation study (N=10 per variant)
+- [x] Run full ablation study (4 proper variants: Full, No-Bootstrap, No-Reflection, No-RAG)
+- [x] Energetic validation: RDKit MMFF94 force-field fallback (real energies)
+- [x] RAG: Lightweight TF-IDF + NetworkX knowledge graph (offline, no API keys)
+- [x] Reaction type diversity improvements (19 named types, better parsing)
 - [x] ChemCoTBench comparison with real data
 
 ## Phase VII: Paper & Release
@@ -104,7 +107,7 @@
 - [x] Configuration reference (docs/configuration.md)
 - [x] LaTeX paper scaffold (paper/main.tex + references.bib)
 - [x] Paper updated with real numbers (66 pairs, 125 molecules, 87.4% diversity, ChemCoT comparison)
-- [x] Ablation table filled (3.5x pairs, +11.6% diversity, +3.4% quality for Full-System)
+- [x] Ablation table filled (Bootstrap=2.5x pairs, Reflection=+15.4% quality, RAG=+7.5pp pass rate)
 - [x] Dockerfile updated for reproducibility
 - [x] .zenodo.json metadata
 - [x] GitHub repo: github.com/aayushkrm/auto-cheminstruct
