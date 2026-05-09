@@ -45,17 +45,17 @@ RDKit Merck Molecular Force Field provides real computed energies as xTB fallbac
 - Reflection → +15.4% quality (grounding)
 - RAG → +7.5 pp pass rate (accuracy)
 
-## Dataset
-- HuggingFace: `aayushkrm/autochem-instruct` — 66 pairs (51 train, 6 val, 9 test)
-- 125 unique molecules, 87.4% Tanimoto diversity, 34.4% scaffold diversity
-- 100% causal reflection coverage, avg quality 0.596
+## Dataset (Final: 2026-05-09)
+- HuggingFace: `aayushkrm/autochem-instruct` — **110 pairs** (81 train, 6 val, 23 test)
+- 187 unique molecules, 87.9% Tanimoto diversity, 33.2% scaffold diversity
+- 13 distinct reaction types, 72.8% causal reflection coverage
+- Avg quality 0.636 (6-dimension rubric)
 
 ## Known Issues
 - Reaction type diversity: LLM tends to return "other" despite named type prompts
 - Solution in progress: stronger system prompt constraints + exact regex matching
 
 ## Next Steps
-1. Scale dataset to 100+ pairs (pipeline -n 20)
-2. Fix reaction type diversity (stronger prompt enforcement)
-3. Run ChemCoT benchmark on scaled dataset
-4. arXiv preprint + Zenodo archive
+1. arXiv preprint upload (arxiv_submission.tar.gz ready in repo root)
+2. Zenodo archive publish (zip repo → zenodo.org/deposit for DOI)
+3. (Done) Scale dataset — 110 pairs achieved

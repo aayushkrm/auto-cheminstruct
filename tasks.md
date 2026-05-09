@@ -95,7 +95,9 @@
 - [x] Ablation framework (4 variants, metrics, reporting)
 - [x] ChemCoT comparison module
 - [x] Enhanced quality scoring (chemistry-aware)
-- [~] Scale to 100+ pairs (66 pairs accumulated, 100+ to be done after ablation)
+- [x] Scale to 110 pairs (merged 3 sessions)
+- [x] Reaction type diversity: 19 specific types in enum, 13 types in dataset
+- [x] HuggingFace updated: aayushkrm/autochem-instruct (110 pairs)
 - [x] Run full ablation study (4 proper variants: Full, No-Bootstrap, No-Reflection, No-RAG)
 - [x] Energetic validation: RDKit MMFF94 force-field fallback (real energies)
 - [x] RAG: Lightweight TF-IDF + NetworkX knowledge graph (offline, no API keys)
