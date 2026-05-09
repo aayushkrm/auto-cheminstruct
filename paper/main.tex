@@ -37,7 +37,7 @@ The democratization of artificial intelligence in the physical sciences requires
 
 We introduce \textsc{Auto-ChemInstruct}, an autonomous, self-verifying multi-agent pipeline that generates physically-validated instruction datasets for chemistry DSLMs without human annotation. Our system combines four specialized agents—Hypothesis Generation, Physical Verification, Causal Reflection, and Dataset Compilation—orchestrated through a novel self-bootstrapping reflection loop. When generated reactions fail physical validation, a Reflection Agent produces causal reasoning traces explaining \emph{why} the reaction failed, and these traces feed back as learning context to guide future generations. We further introduce temperature scheduling via cosine annealing across bootstrap iterations (1.0 $\rightarrow$ 0.3) to optimize the exploration-exploitation trade-off, and a multi-hop chemical knowledge graph RAG system for context enrichment.
 
-Our pipeline produces DPO/RLHF preference pairs at scale: 66 pairs from 95 hypotheses (69.7\% pass rate), with 87.4\% structural diversity across 125 unique molecules (34.4\% scaffold diversity). ChemCoTBench comparison shows our synthetic approach achieves comparable molecular diversity to human-annotated datasets while adding 100\% causal reflection coverage and a 6-dimensional quality scoring rubric. Component ablation reveals self-bootstrapping provides a 2.5$\times$ increase in output volume, reflection contributes 15.4\% quality improvement, and RAG improves pass rates by 7.5 percentage points. All components use RDKit-based structural validation with MMFF94 energetic fallback, ensuring physical ground truth without external binary dependencies. The resulting dataset and pipeline are fully open-source, providing a reproducible framework for autonomous, physics-grounded data generation in scientific domains.
+Our pipeline produces DPO/RLHF preference pairs at scale: 86 pairs from 139 hypotheses (58.8\% pass rate), with 87.2\% structural diversity across 158 unique molecules spanning 12 distinct reaction types. ChemCoTBench comparison shows our synthetic approach achieves comparable molecular diversity to human-annotated datasets (1495 samples, 22 types) while adding 87.7\% causal reflection coverage and a 6-dimensional quality scoring rubric (avg 0.624). Component ablation reveals self-bootstrapping provides a 2.5$\times$ increase in output volume, reflection contributes 15.4\% quality improvement, and RAG improves pass rates by 7.5 percentage points. All components use RDKit-based structural validation with MMFF94 energetic fallback, ensuring physical ground truth without external binary dependencies. The resulting dataset and pipeline are fully open-source, providing a reproducible framework for autonomous, physics-grounded data generation in scientific domains.
 \end{abstract}
 
 \section{Introduction}
@@ -175,28 +175,28 @@ We compare Auto-ChemInstruct against ChemCoTBench, the leading human-annotated c
 \toprule
 \textbf{Metric} & \textbf{Auto-ChemInstruct} & \textbf{ChemCoTBench} \\
 \midrule
-Total Samples & 51 (train) & 1,495 \\
-Reaction Types & 1+ & 22 \\
-Unique Molecules & 125 & — \\
-Tanimoto Diversity & 0.874 & — \\
-Scaffold Diversity & 34.4\% & — \\
-Avg Quality Score & 0.596 & — \\
-Reflection Traces & 100\% & 0\% \\
+Total Samples & 65 (train) & 1,495 \\
+Reaction Types & 12 & 22 \\
+Unique Molecules & 158 & — \\
+Tanimoto Diversity & 0.872 & — \\
+Scaffold Diversity & 33.5\% & — \\
+Avg Quality Score & 0.624 & — \\
+Reflection Traces & 87.7\% & 0\% \\
 Annotation Cost & \$0 (automated) & High (human expert) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Diversity Analysis}
-Structural diversity analysis of the 66-pair dataset revealed strong molecular diversity. Across 125 unique molecules extracted from passed reactions:
+Structural diversity analysis of the 86-pair dataset revealed strong molecular diversity. Across 158 unique molecules extracted from passed reactions:
 
-\textbf{Molecular Properties}: The dataset spans a molecular weight range of 54--360 g/mol (mean: 158), with 0--4 rings (mean: 1.3) and 0--4 rotatable bonds (mean: 1.0). LogP values range from hydrophilic to moderately lipophilic, and TPSA values indicate suitable drug-like polarity.
+\textbf{Molecular Properties}: The dataset spans a molecular weight range of 44--367 g/mol (mean: 165), with 0--4 rings (mean: 1.4) and 0--4 rotatable bonds (mean: 1.0). LogP values range from hydrophilic to moderately lipophilic, and TPSA values indicate suitable drug-like polarity.
 
-\textbf{Tanimoto Diversity}: Pairwise Tanimoto similarity using Morgan fingerprints (radius=2, 2048 bits) yielded a mean similarity of 0.126, corresponding to a structural diversity score of 0.874. The maximum pairwise similarity was 1.000 (identical products formed via different routes), while the minimum was 0.000 (completely orthogonal structures).
+\textbf{Tanimoto Diversity}: Pairwise Tanimoto similarity using Morgan fingerprints (radius=2, 2048 bits) yielded a mean similarity of 0.128, corresponding to a structural diversity score of 0.872. The maximum pairwise similarity was 1.000 (identical products formed via different routes), while the minimum was 0.000 (completely orthogonal structures).
 
-\textbf{Scaffold Diversity}: Murcko scaffold decomposition identified 43 unique scaffolds from 125 molecules (34.4\% scaffold diversity), indicating that the hypothesis agent generates structurally diverse cores rather than minor substituent variations.
+\textbf{Scaffold Diversity}: Murcko scaffold decomposition identified 53 unique scaffolds from 158 molecules (33.5\% scaffold diversity), indicating that the hypothesis agent generates structurally diverse cores rather than minor substituent variations. The expanded ReactionType enum (19 specific types) enabled 12 distinct reaction classes in the dataset, up from 1 in earlier iterations.
 
-\textbf{Quality Scoring}: The 6-dimensional quality rubric (structural validity, QED, reflection depth, yield, scaffold diversity, reaction specificity) produces an average score of 0.596 across all pairs, with reflection depth contributing the most distinctive dimension.
+\textbf{Quality Scoring}: The 6-dimensional quality rubric (structural validity, QED, reflection depth, yield, scaffold diversity, reaction specificity) produces an average score of 0.624 across all pairs, with reflection depth contributing the most distinctive dimension.
 Sample preference pairs demonstrate the system's ability to generate chemically meaningful contrasts:
 
 \begin{quote}
