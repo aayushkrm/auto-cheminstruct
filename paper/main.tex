@@ -37,7 +37,7 @@ The democratization of artificial intelligence in the physical sciences requires
 
 We introduce \textsc{Auto-ChemInstruct}, an autonomous, self-verifying multi-agent pipeline that generates physically-validated instruction datasets for chemistry DSLMs without human annotation. Our system combines four specialized agents—Hypothesis Generation, Physical Verification, Causal Reflection, and Dataset Compilation—orchestrated through a novel self-bootstrapping reflection loop. When generated reactions fail physical validation, a Reflection Agent produces causal reasoning traces explaining \emph{why} the reaction failed, and these traces feed back as learning context to guide future generations. We further introduce temperature scheduling via cosine annealing across bootstrap iterations (1.0 $\rightarrow$ 0.3) to optimize the exploration-exploitation trade-off, and a multi-hop chemical knowledge graph RAG system for context enrichment.
 
-Our pipeline produces DPO/RLHF preference pairs at scale: 86 pairs from 139 hypotheses (58.8\% pass rate), with 87.2\% structural diversity across 158 unique molecules spanning 12 distinct reaction types. ChemCoTBench comparison shows our synthetic approach achieves comparable molecular diversity to human-annotated datasets (1495 samples, 22 types) while adding 87.7\% causal reflection coverage and a 6-dimensional quality scoring rubric (avg 0.624). Component ablation reveals self-bootstrapping provides a 2.5$\times$ increase in output volume, reflection contributes 15.4\% quality improvement, and RAG improves pass rates by 7.5 percentage points. All components use RDKit-based structural validation with MMFF94 energetic fallback, ensuring physical ground truth without external binary dependencies. The resulting dataset and pipeline are fully open-source, providing a reproducible framework for autonomous, physics-grounded data generation in scientific domains.
+Our pipeline produces DPO/RLHF preference pairs at scale: 110 pairs from 167 hypotheses (65.9\% pass rate), with 87.9\% structural diversity across 187 unique molecules spanning 13 distinct reaction types. ChemCoTBench comparison shows our synthetic approach achieves comparable molecular diversity to human-annotated datasets (1,495 samples, 22 types) while adding 72.8\% causal reflection coverage and a 6-dimensional quality scoring rubric (avg 0.636). Component ablation reveals self-bootstrapping provides a 2.5$\times$ increase in output volume, reflection contributes 15.4\% quality improvement, and RAG improves pass rates by 7.5 percentage points. All components use RDKit-based structural validation with MMFF94 energetic fallback, ensuring physical ground truth without external binary dependencies. The resulting dataset and pipeline are fully open-source, providing a reproducible framework for autonomous, physics-grounded data generation in scientific domains.
 \end{abstract}
 
 \section{Introduction}
@@ -175,13 +175,13 @@ We compare Auto-ChemInstruct against ChemCoTBench, the leading human-annotated c
 \toprule
 \textbf{Metric} & \textbf{Auto-ChemInstruct} & \textbf{ChemCoTBench} \\
 \midrule
-Total Samples & 65 (train) & 1,495 \\
-Reaction Types & 12 & 22 \\
-Unique Molecules & 158 & — \\
-Tanimoto Diversity & 0.872 & — \\
-Scaffold Diversity & 33.5\% & — \\
-Avg Quality Score & 0.624 & — \\
-Reflection Traces & 87.7\% & 0\% \\
+Total Samples & 81 (train) & 1,495 \\
+Reaction Types & 13 & 22 \\
+Unique Molecules & 187 & — \\
+Tanimoto Diversity & 0.879 & — \\
+Scaffold Diversity & 33.2\% & — \\
+Avg Quality Score & 0.636 & — \\
+Reflection Traces & 72.8\% & 0\% \\
 Annotation Cost & \$0 (automated) & High (human expert) \\
 \bottomrule
 \end{tabular}
