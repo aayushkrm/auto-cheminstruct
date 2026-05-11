@@ -213,14 +213,15 @@ Temperature scheduling was verified across a 3-iteration bootstrap run: iteratio
 \section{Related Work}
 
 \begin{itemize}
-    \item \textbf{ChemCoTBench} \cite{}: Human-annotated chain-of-thought benchmark for chemistry
-    \item \textbf{ChemDual} \cite{}: Dual-path retrosynthesis prediction
-    \item \textbf{Coscientist} \cite{}: GPT-4 agent for chemical experiment design
-    \item \textbf{ChemCrow} \cite{}: LLM chemistry agent with tool augmentation
-    \item \textbf{Self-Improving LLMs} \cite{}: General approaches to LLM self-improvement
+    \item \textbf{ChemCoTBench} \cite{chemcotbench}: Human-annotated chain-of-thought benchmark for chemistry
+    \item \textbf{ChemCrow} \cite{chemcrow}: LLM chemistry agent with tool augmentation (RDKit, PubChem)
+    \item \textbf{Coscientist} \cite{coscientist}: GPT-4 agent for autonomous chemical experiment design
+    \item \textbf{AlphaEvolve} \cite{alphaevolve}: LLM-guided evolutionary computation for mathematical discovery
+    \item \textbf{GigaEvo} \cite{gigaevo}: Open-source framework for LLM-powered evolutionary optimization (MAP-Elites)
+    \item \textbf{MAP-Elites} \cite{mapelites}: Quality-diversity evolutionary algorithm for illumination
 \end{itemize}
 
-Our work differs fundamentally: we generate \emph{physically-validated} data using computational chemistry as oracle, and the reflection loop produces causal explanations grounded in physical principles, not just linguistic self-consistency.
+Our work differs fundamentally from ChemCrow in two key ways: (1) we generate \emph{physically-validated} data using computational chemistry as an oracle rather than just tool-augmented question answering, and (2) the self-bootstrapping reflection loop produces causal explanations grounded in physical principles. Unlike Coscientist's single-agent design, our 4-agent hub-spoke architecture enables division of labor between generation, verification, reflection, and compilation. Looking forward, GigaEvo's MAP-Elites quality-diversity optimization \cite{gigaevo,mapelites} provides a path to replace our current temperature-annealed bootstrap with population-based evolutionary search, inspired by AlphaEvolve's \cite{alphaevolve} success in mathematical discovery.
 
 \section{Conclusion and Future Work}
 
