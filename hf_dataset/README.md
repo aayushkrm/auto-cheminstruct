@@ -18,7 +18,16 @@ size_categories:
 task_categories:
 - text-generation
 - question-answering
-viewer: false
+viewer: true
+configs:
+- config_name: default
+  data_files:
+  - split: train
+    path: train.jsonl
+  - split: validation
+    path: val.jsonl
+  - split: test
+    path: test.jsonl
 ---
 
 # Auto-ChemInstruct
