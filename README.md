@@ -2,7 +2,6 @@
 
 **Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models in Chemistry**
 
-[![arXiv](https://img.shields.io/badge/arXiv-pending-red)](https://arxiv.org)
 [![HuggingFace](https://img.shields.io/badge/🤗-Dataset-yellow)](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
