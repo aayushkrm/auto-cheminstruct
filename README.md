@@ -83,20 +83,9 @@ uv run pytest  # 121/121 passing
 # View config
 uv run python -m src.cli.main config
 ```
-
-## Publication
-
-Target: NeurIPS Datasets & Benchmarks Track
-
-**Contributions:**
-1. Novel methodology for physics-verified synthetic data generation with self-bootstrapping
-2. Open-source dataset of 110 DPO preference pairs with causal reflection traces (13 reaction types)
-3. Reusable agentic pipeline with component ablation demonstrating each innovation's contribution
-
-Paper: `paper/main.tex` | arXiv package: `arxiv_submission.tar.gz`
+https://github.com/aayushkrm/auto-cheminstruct
 
 ## Links
 
 - 🤗 [HuggingFace Dataset](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
-- 📄 [Paper (arXiv, pending)](https://arxiv.org)
 - 🏗️ [GitHub Repository](https://github.com/aayushkrm/auto-cheminstruct)
