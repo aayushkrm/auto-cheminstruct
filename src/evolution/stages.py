@@ -6,6 +6,7 @@ retry semantics, and optional flagging.
 
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from langchain_core.language_models import BaseChatModel
@@ -15,6 +16,7 @@ from src.agents.compilation_agent import CompilationAgent
 from src.agents.hypothesis_agent import HypothesisGenerationAgent
 from src.agents.reflection_agent import ReflectionAgent
 from src.agents.verification_agent import VerificationAgent
+from src.carl.chain import CARLReflectionAgent
 from src.config import (
     CompilationAgentConfig,
     HypothesisAgentConfig,
@@ -140,7 +142,10 @@ def make_verify_fn(config: VerificationAgentConfig) -> callable:
 def make_reflect_fn(
     llm: BaseChatModel,
     config: ReflectionAgentConfig,
+    use_carl: bool = False,
 ) -> callable:
+    carl_agent = CARLReflectionAgent(enabled=True) if use_carl else None
+
     agent = ReflectionAgent(
         llm=llm,
         temperature=config.temperature,
@@ -158,10 +163,54 @@ def make_reflect_fn(
         if not failed_h:
             return ReflectOutput(traces=[], count=0)
 
-        traces = agent.reflect_batch(failed_h, failed_r)
+        if carl_agent:
+            carl_results = carl_agent.reflect_batch(failed_h, failed_r)
+            traces = _carl_to_reflection_traces(carl_results)
+        else:
+            traces = agent.reflect_batch(failed_h, failed_r)
+
         return ReflectOutput(traces=traces, count=len(traces))
 
     return fn
+
+
+def _carl_to_reflection_traces(
+    carl_results: list,
+) -> list[ReflectionTrace]:
+    """Convert CARLResult objects to ReflectionTrace objects.
+
+    Merges the 4-step CARL analysis into the existing ReflectionTrace schema.
+    """
+    traces: list[ReflectionTrace] = []
+    for cr in carl_results:
+        from src.data.models import FailureCategory, ReflectionTrace
+
+        synthesis = getattr(cr, "synthesis", None)
+        if synthesis is None:
+            continue
+
+        failure_cats: list[FailureCategory] = []
+        for cat_name in synthesis.failure_categories or []:
+            try:
+                failure_cats.append(FailureCategory(cat_name))
+            except ValueError:
+                failure_cats.append(FailureCategory.OTHER)
+
+        trace = ReflectionTrace(
+            hypothesis_id=UUID(cr.hypothesis_id) if cr.hypothesis_id != "unknown" else None,
+            verification_result_id=None,
+            failure_categories=failure_cats or [FailureCategory.OTHER],
+            primary_cause=synthesis.primary_cause,
+            causal_explanation=synthesis.causal_explanation,
+            chemical_principles=synthesis.chemical_principles or [],
+            fix_suggestion=synthesis.fix_suggestion,
+            confidence=synthesis.confidence,
+            prompt_used="carl-4-step-chain",
+            created_at=datetime.now(),
+        )
+        traces.append(trace)
+
+    return traces
 
 
 def make_compile_fn(config: CompilationAgentConfig) -> callable:
