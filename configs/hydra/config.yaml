@@ -1,0 +1,45 @@
+# Auto-ChemInstruct Hydra Configuration
+# Top-level config referencing component configs via Hydra's defaults list
+
+defaults:
+  - pipeline: default
+  - llm: fireworks
+  - evolution: map_elites
+  - carl: reflection
+  - islands: default
+  - _self_
+
+# GigaEvo problem definition
+problem:
+  name: autochem
+  dir: ${hydra:runtime.cwd}/problems/autochem
+
+# Evolution parameters
+max_generations: 50
+max_mutants_per_generation: 20
+population_size: 100
+
+# Redis connection
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  key_prefix: autochem
+
+# Session
+session_id: null  # null = auto-generate
+output_dir: ${hydra:runtime.cwd}/outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+
+# Logging
+log_level: INFO
+log_file: ${output_dir}/evolution.log
+
+hydra:
+  run:
+    dir: ${output_dir}
+  job_logging:
+    root:
+      level: ${log_level}
+  sweep:
+    dir: ${hydra:runtime.cwd}/outputs/sweeps
+    subdir: ${hydra.job.num}

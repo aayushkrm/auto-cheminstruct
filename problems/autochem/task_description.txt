@@ -1,0 +1,74 @@
+# Auto-ChemInstruct Reaction Generation Task
+
+## Task Definition
+
+Generate physically valid chemical reactions with full mechanisms. For each reaction, provide:
+- Reactants: SMILES strings of starting materials
+- Products: SMILES strings of expected products
+- Reaction type from controlled vocabulary (19 named types)
+- Conditions: temperature (C), pressure (atm), solvent, catalyst, time (h), pH, atmosphere
+- Mechanism: step-by-step electron-pushing description
+- Yield estimate: expected yield range (0-100)
+- Rationale: why this reaction should work
+
+## Domain Constraints
+
+1. All SMILES must be valid and parseable by RDKit
+2. Reactants must be chemically compatible (no impossible combinations)
+3. Products must be reachable via feasible mechanism from reactants
+4. No hypervalent carbon (max 4 bonds), no impossible oxidation states
+5. No peroxide bridges or azide groups unless explicitly in named reactions that use them
+6. Ring closures must follow Baldwin's rules
+7. Molecular weight: 50-900 Da per molecule
+8. Reactions should be diverse across scaffold types and reaction types
+
+## Target Output Format
+
+Each hypothesis must produce:
+```json
+{
+  "reaction_type": "<ReactionType enum value>",
+  "reactants": ["SMILES1", "SMILES2", ...],
+  "products": ["SMILES_product1", "SMILES_product2", ...],
+  "conditions": {
+    "temperature_c": 25.0,
+    "pressure_atm": 1.0,
+    "solvent": "THF",
+    "catalyst": "Pd(PPh3)4",
+    "time_h": 12.0,
+    "pH": 7.0,
+    "atmosphere": "N2"
+  },
+  "yield_estimate": 75.0,
+  "mechanism_steps": ["step 1 description", "step 2 description", ...],
+  "rationale": "This reaction should work because..."
+}
+```
+
+## Reaction Types (19 total)
+
+acylation, aldol_condensation, alkylation, amidation, bromination, claisen_condensation,
+click_reaction, diels_alder, epoxidation, esterification, grignard_reaction,
+hydrogenation, michael_addition, oxidation, reduction, suzuki_coupling,
+wittig_reaction, friedel_crafts_acylation, friedel_crafts_alkylation
+
+## Failure Modes to Avoid
+
+1. Steric hindrance blocking reactive centers
+2. Electronic incompatibility (wrong electrophile/nucleophile pairing)
+3. Thermodynamic unfavorability (endothermic without driving force)
+4. Kinetic barriers too high (requires impossible activation energy)
+5. Competing side reactions dominating
+6. Unstable intermediates or products
+7. Solvent incompatibility with reagents
+8. Impossible ring strain (3-membered rings with wrong atoms)
+9. Violation of valence rules
+10. Missing protecting groups where needed
+
+## Evaluation Criteria
+
+- Structural validity: SMILES parse, valence, atom types (RDKit)
+- Energetic feasibility: MMFF94 force-field energy < threshold
+- Chemical feasibility: no unstable groups, reasonable ring strain
+- Drug-likeness: QED score, SA score, Lipinski compliance
+- Diversity: scaffold novelty, Tanimoto distance from archive

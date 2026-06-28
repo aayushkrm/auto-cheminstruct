@@ -1,0 +1,21 @@
+{
+  "reaction_type": "aldol_condensation",
+  "reactants": ["CC(=O)C", "O=CC1=CC=CC=C1"],
+  "products": ["CC(=O)C=Cc1ccccc1"],
+  "conditions": {
+    "temperature_c": 25.0,
+    "pressure_atm": 1.0,
+    "solvent": "EtOH",
+    "catalyst": "NaOH",
+    "time_h": 6.0,
+    "pH": 12.0,
+    "atmosphere": null
+  },
+  "yield_estimate": 75.0,
+  "mechanism_steps": [
+    "Base deprotonates acetone alpha-carbon, forming enolate",
+    "Enolate attacks benzaldehyde carbonyl",
+    "Dehydration eliminates water, forming alpha,beta-unsaturated ketone"
+  ],
+  "rationale": "Crossed aldol with benzaldehyde and acetone under basic conditions"
+}

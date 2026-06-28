@@ -1,0 +1,21 @@
+{
+  "reaction_type": "suzuki_coupling",
+  "reactants": ["Brc1ccccc1", "OB(O)c1ccccc1"],
+  "products": ["c1ccc(-c2ccccc2)cc1"],
+  "conditions": {
+    "temperature_c": 85.0,
+    "pressure_atm": 1.0,
+    "solvent": "toluene",
+    "catalyst": "Pd(PPh3)4",
+    "time_h": 12.0,
+    "pH": null,
+    "atmosphere": "N2"
+  },
+  "yield_estimate": 85.0,
+  "mechanism_steps": [
+    "Oxidative addition: Pd(0) inserts into C-Br bond",
+    "Transmetallation: aryl boronic acid transfers aryl group to Pd",
+    "Reductive elimination: biaryl product formed, Pd(0) regenerated"
+  ],
+  "rationale": "Suzuki coupling is well-established for biaryl formation under Pd(0) catalysis"
+}

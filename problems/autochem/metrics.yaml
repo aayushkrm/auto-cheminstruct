@@ -1,0 +1,68 @@
+# Auto-ChemInstruct Quality Metrics for MAP-Elites Evolution
+# Maps our 6-dimension quality scoring to GigaEvo's metric format
+
+metrics:
+  fitness:
+    display_name: "Composite Fitness"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.01
+    is_primary: true
+    description: "Weighted composite of structural validity, energetic feasibility, drug-likeness, and diversity"
+
+  structural_validity:
+    display_name: "Structural Validity"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.05
+    description: "RDKit SMILES parse, valence check, atom type validation — binary pass/fail with error granularity"
+
+  energetic_feasibility:
+    display_name: "Energetic Feasibility"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.01
+    description: "MMFF94 force-field energy below threshold, no impossible geometries"
+
+  chemical_diversity:
+    display_name: "Chemical Diversity"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.05
+    description: "Tanimoto dissimilarity from archive + scaffold novelty"
+
+  pass_rate:
+    display_name: "Verification Pass Rate"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.1
+    description: "Fraction of verification checks passed"
+
+  reaction_specificity:
+    display_name: "Reaction Type Specificity"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 4
+    significance_threshold: 0.05
+    description: "How well the reaction matches its declared type (0=generic, 1=highly specific)"
+
+  qed_score:
+    display_name: "QED Drug-Likeness"
+    higher_is_better: true
+    bounds: [0.0, 1.0]
+    precision: 3
+    significance_threshold: 0.1
+    description: "Quantitative Estimate of Drug-likeness"
+
+  sa_score:
+    display_name: "Synthetic Accessibility"
+    higher_is_better: false
+    bounds: [1.0, 10.0]
+    precision: 2
+    significance_threshold: 0.5
+    description: "Lower is more synthetically accessible"

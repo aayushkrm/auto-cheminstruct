@@ -1,0 +1,21 @@
+{
+  "reaction_type": "diels_alder",
+  "reactants": ["C=CC=C", "C=CC=O"],
+  "products": ["C1CC=CCC1C=O"],
+  "conditions": {
+    "temperature_c": 100.0,
+    "pressure_atm": 1.0,
+    "solvent": "toluene",
+    "catalyst": null,
+    "time_h": 24.0,
+    "pH": null,
+    "atmosphere": null
+  },
+  "yield_estimate": 80.0,
+  "mechanism_steps": [
+    "Diene (butadiene) adopts s-cis conformation",
+    "Concerted [4+2] cycloaddition with dienophile (acrolein)",
+    "Endo transition state preferred due to secondary orbital interactions"
+  ],
+  "rationale": "Classic Diels-Alder with electron-deficient dienophile, endo-selective"
+}

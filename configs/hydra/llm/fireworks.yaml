@@ -1,0 +1,37 @@
+# Fireworks AI LLM Configuration
+# OpenAI-compatible API for DeepSeek models
+
+provider: fireworks
+model: accounts/fireworks/models/deepseek-v3p2
+base_url: https://api.fireworks.ai/inference/v1
+api_key: ${oc.env:FIREWORKS_API_KEY,???}
+
+# Generation defaults
+temperature: 0.9
+top_p: 0.95
+max_tokens: 2048
+
+# Per-operation overrides
+mutation:
+  temperature: 0.9  # high temp for diversity
+  top_p: 0.95
+  max_tokens: 2048
+
+reflection:
+  temperature: 0.3  # low temp for factual precision
+  top_p: 0.9
+  max_tokens: 1024
+
+insight:
+  temperature: 0.5
+  top_p: 0.9
+  max_tokens: 2048
+
+# Multi-model routing (for heterogeneous exploration)
+multi_model:
+  enabled: false
+  models:
+    - model: accounts/fireworks/models/deepseek-v3p2
+      probability: 0.7
+    - model: accounts/fireworks/models/qwen2p5-72b-instruct
+      probability: 0.3

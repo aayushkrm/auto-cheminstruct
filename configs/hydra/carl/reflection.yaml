@@ -1,0 +1,86 @@
+# CARL Reasoning Chain Configuration
+# Structured causal analysis for reflection
+
+# Reflection chain steps (4-step parallelizable DAG)
+reflection_steps:
+  - number: 1
+    title: "Steric Analysis"
+    aim: "Identify all steric clashes and spatial incompatibilities in the proposed reaction"
+    reasoning_questions:
+      - "Which atoms or functional groups are within van der Waals contact distance?"
+      - "Is the proposed transition state geometry sterically accessible?"
+      - "Are there any eclipsing or gauche interactions in the reactive conformation?"
+      - "Do Baldwin's rules permit the proposed ring closure?"
+    step_context_queries:
+      - "steric hindrance {reactants}"
+      - "steric clash {reaction_type}"
+      - "Baldwin rules {reaction_type}"
+    dependencies: []
+    stage_action: "Steric feasibility assessment"
+
+  - number: 2
+    title: "Electronic Analysis"
+    aim: "Evaluate electronic compatibility of reactants for the proposed mechanism"
+    reasoning_questions:
+      - "Are the frontier orbital energies compatible (HOMO-LUMO gap feasible)?"
+      - "Is the electrophile sufficiently electron-deficient?"
+      - "Is the nucleophile sufficiently electron-rich?"
+      - "Does HSAB theory predict compatibility between these species?"
+    step_context_queries:
+      - "electronic effects {reaction_type}"
+      - "HOMO LUMO {reactants}"
+      - "HSAB {reactant1} {reactant2}"
+    dependencies: []
+    stage_action: "Electronic compatibility assessment"
+
+  - number: 3
+    title: "Thermodynamic & Kinetic Analysis"
+    aim: "Assess thermodynamic favorability and kinetic accessibility"
+    reasoning_questions:
+      - "What is the estimated enthalpy change based on bond dissociation energies?"
+      - "What is the entropy change (increase or decrease in degrees of freedom)?"
+      - "Are there lower-energy competing reaction pathways?"
+      - "Is the activation energy barrier reasonable at the given temperature?"
+    step_context_queries:
+      - "thermodynamics {reaction_type}"
+      - "kinetics {reaction_type}"
+      - "activation energy {reaction_type}"
+    dependencies: []
+    stage_action: "Thermodynamic and kinetic evaluation"
+
+  - number: 4
+    title: "Causal Synthesis"
+    aim: "Synthesize steric, electronic, and thermodynamic analyses into a unified causal explanation"
+    reasoning_questions:
+      - "What is the single PRIMARY cause of failure across all analyses?"
+      - "How do steric, electronic, and thermodynamic factors interact or compound?"
+      - "What is the most impactful single modification to fix this reaction?"
+      - "What chemical principles explain the interaction between these factors?"
+    step_context_queries: []
+    dependencies: [1, 2, 3]
+    stage_action: "Causal synthesis and fix suggestion"
+
+# Execution configuration
+execution:
+  max_workers: 3  # Steps 1-3 run in parallel
+  enable_progress: true
+  retry_max: 2  # per step
+  timeout: 120.0  # seconds for entire chain
+
+# Context extraction
+context:
+  strategy: substring  # substring | vector
+  case_sensitive: false
+  min_word_length: 3
+  max_matches_per_query: 5
+  # vector config (if strategy=vector)
+  vector:
+    similarity_threshold: 0.75
+    max_results: 5
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
+# Language
+language: english  # english | russian
+
+# CARL integration toggle
+enabled: false  # flip to true to use CARL instead of flat reflection prompt

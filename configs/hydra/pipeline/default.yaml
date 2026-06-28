@@ -1,0 +1,62 @@
+# DAG Pipeline Configuration
+# Defines stage topology, parallelism, caching, and timeouts
+
+stages:
+  smiles_validation:
+    name: SMILES Validation
+    class: src.evolution.dag_stages.SmilesValidationStage
+    timeout: 30.0
+    cacheable: true
+    retry:
+      max_attempts: 2
+      backoff: exponential
+
+  energy_validation:
+    name: Energy Validation
+    class: src.evolution.dag_stages.EnergyValidationStage
+    timeout: 60.0
+    cacheable: true
+    retry:
+      max_attempts: 2
+      backoff: exponential
+    depends_on: [smiles_validation]
+
+  quality_scoring:
+    name: Quality Scoring
+    class: src.evolution.dag_stages.QualityScoringStage
+    timeout: 30.0
+    cacheable: true
+    retry:
+      max_attempts: 1
+      backoff: linear
+    depends_on: [energy_validation]
+
+  reflection:
+    name: Reflection Analysis
+    class: src.evolution.dag_stages.ReflectionStage
+    timeout: 120.0
+    cacheable: false
+    retry:
+      max_attempts: 2
+      backoff: exponential
+    depends_on: [quality_scoring]
+
+  lineage:
+    name: Lineage Tracking
+    class: src.evolution.dag_stages.LineageStage
+    timeout: 10.0
+    cacheable: false
+    retry:
+      max_attempts: 0
+      backoff: linear
+    depends_on: [reflection]
+
+# DAG execution settings
+execution:
+  max_parallel_stages: 4
+  max_concurrent_dags: 8
+  stall_detection_timeout: 300.0  # seconds
+  dag_timeout: 600.0  # seconds per hypothesis
+
+# Linear mode fallback
+linear_mode_enabled: true  # allows switching to sequential execution

@@ -1,0 +1,69 @@
+# Multi-Island Evolution Configuration
+# Islands specialize in different optimization objectives
+
+islands:
+  - id: diversity_island
+    name: "Diversity First"
+    objective:
+      metric_weights:
+        chemical_diversity: 0.50
+        reaction_specificity: 0.30
+        structural_validity: 0.20
+    max_size: 100
+    migration:
+      interval: 10  # generations
+      max_migrants: 3
+      policy: conservative
+
+  - id: quality_island
+    name: "Quality First"
+    objective:
+      metric_weights:
+        fitness: 0.50
+        structural_validity: 0.25
+        energetic_feasibility: 0.25
+    max_size: 100
+    migration:
+      interval: 10
+      max_migrants: 3
+      policy: conservative
+
+  - id: novelty_island
+    name: "Novelty First"
+    objective:
+      metric_weights:
+        chemical_diversity: 0.60
+        qed_score: 0.40
+    max_size: 100
+    migration:
+      interval: 10
+      max_migrants: 3
+      policy: conservative
+
+  - id: yield_island
+    name: "Yield Optimizer"
+    objective:
+      metric_weights:
+        pass_rate: 0.50
+        structural_validity: 0.30
+        sa_score: 0.20  # lower = better synthetic accessibility
+    max_size: 100
+    migration:
+      interval: 10
+      max_migrants: 3
+      policy: conservative
+
+# Global migration settings
+migration:
+  enabled: true
+  policy: conservative  # conservative | aggressive | adaptive
+  conservative:
+    interval: 10
+    max_migrants: 3
+  aggressive:
+    interval: 5
+    max_migrants: 8
+  adaptive:
+    stagnation_threshold: 5
+    interval_min: 5
+    interval_max: 15

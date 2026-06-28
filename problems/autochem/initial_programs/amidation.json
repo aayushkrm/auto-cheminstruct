@@ -1,0 +1,21 @@
+{
+  "reaction_type": "amidation",
+  "reactants": ["CC(=O)Cl", "CN"],
+  "products": ["CC(=O)NC", "Cl"],
+  "conditions": {
+    "temperature_c": 0.0,
+    "pressure_atm": 1.0,
+    "solvent": "CH2Cl2",
+    "catalyst": "Et3N",
+    "time_h": 2.0,
+    "pH": null,
+    "atmosphere": "N2"
+  },
+  "yield_estimate": 95.0,
+  "mechanism_steps": [
+    "Amine attacks acyl chloride carbonyl carbon",
+    "Tetrahedral intermediate collapses, expelling chloride",
+    "Triethylamine scavenges HCl, driving reaction to completion"
+  ],
+  "rationale": "Acyl chlorides are highly reactive toward amines; Et3N neutralizes HCl byproduct"
+}

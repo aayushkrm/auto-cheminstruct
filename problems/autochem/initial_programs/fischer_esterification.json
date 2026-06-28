@@ -1,0 +1,21 @@
+{
+  "reaction_type": "esterification",
+  "reactants": ["CC(=O)O", "CCO"],
+  "products": ["CC(=O)OCC", "O"],
+  "conditions": {
+    "temperature_c": 80.0,
+    "pressure_atm": 1.0,
+    "solvent": null,
+    "catalyst": "H2SO4",
+    "time_h": 8.0,
+    "pH": null,
+    "atmosphere": null
+  },
+  "yield_estimate": 90.0,
+  "mechanism_steps": [
+    "Acid protonates carbonyl oxygen, activating it for nucleophilic attack",
+    "Ethanol attacks carbonyl carbon, forming tetrahedral intermediate",
+    "Proton transfer and water elimination produce ethyl acetate"
+  ],
+  "rationale": "Fischer esterification with acid catalysis, equilibrium driven by excess alcohol"
+}

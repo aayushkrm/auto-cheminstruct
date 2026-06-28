@@ -1,0 +1,61 @@
+# MAP-Elites Evolution Configuration
+# Behavior space, selection, and island settings
+
+# Behavior space: 3D grid of reaction niches
+behavior_space:
+  dimensions:
+    - name: reaction_type
+      bins: 26  # one bin per ReactionType enum value
+      bounds: [0, 25]
+      binning: linear
+
+    - name: molecular_weight
+      bins: 10  # log-scaled 50-900+ Da
+      bounds: [50, 900]
+      binning: log
+
+    - name: fitness
+      bins: 10  # composite quality 0.0-1.0
+      bounds: [0.0, 1.0]
+      binning: linear
+
+  total_cells: 2600  # 26 × 10 × 10
+
+# Selection strategies
+selection:
+  elite_selector:
+    type: tournament
+    tournament_size: 3
+
+  archive_selector:
+    type: sum
+    fitness_keys: [fitness, chemical_diversity]
+    weights: [0.7, 0.3]
+
+  archive_remover:
+    type: fitness  # remove lowest fitness when over capacity
+
+# Mutation operators (weights determine probability distribution)
+mutation_operators:
+  - name: reactant_substitution
+    weight: 0.25
+  - name: condition_optimization
+    weight: 0.20
+  - name: reaction_type_crossover
+    weight: 0.15
+  - name: scaffold_hopping
+    weight: 0.15
+  - name: insight_guided_mutation
+    weight: 0.25
+
+# Evolution loop parameters
+evolution:
+  max_generations: 50
+  mutants_per_generation: 20
+  refresh_every_n_generations: 5  # re-evaluate evolving programs
+  seed_programs: 50  # initial archive seeding
+
+# Convergence criteria
+convergence:
+  min_grid_fill_rate: 0.5  # stop if 50% of cells filled
+  stagnation_generations: 10  # stop if no improvement for N gens
