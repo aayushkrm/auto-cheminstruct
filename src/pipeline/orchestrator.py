@@ -66,8 +66,9 @@ class PipelineOrchestrator:
         self._init_rag()
 
     def _init_llm(self) -> None:
-        """Initialize LLM client from config."""
+        """Initialize LLM clients from config."""
         self.llm = create_llm(self.config)
+        self.llm_json = create_llm(self.config, json_mode=True, temperature=0.3)
         logger.info(
             "LLM initialized: provider={}, model={}",
             self.config.llm.provider,
@@ -134,7 +135,9 @@ class PipelineOrchestrator:
         self._load_checkpoint()
 
         if self.session.id != session_id:
-            raise PipelineError(f"Checkpoint mismatch: expected {session_id}, got {self.session.id}")
+            raise PipelineError(
+                f"Checkpoint mismatch: expected {session_id}, got {self.session.id}"
+            )
 
         logger.info(
             "Session resumed: id={}, status={}, hypotheses_generated={}",
@@ -246,13 +249,11 @@ class PipelineOrchestrator:
             self._index_to_rag(new_hypotheses, new_results)
 
             failed_hypotheses = [
-                h for h, r in zip(new_hypotheses, new_results)
+                h
+                for h, r in zip(new_hypotheses, new_results)
                 if r.status == VerificationStatus.FAILED
             ]
-            failed_results = [
-                r for r in new_results
-                if r.status == VerificationStatus.FAILED
-            ]
+            failed_results = [r for r in new_results if r.status == VerificationStatus.FAILED]
 
             if failed_hypotheses and not skip_reflection:
                 self.session.status = PipelineStatus.REFLECTING
@@ -310,7 +311,9 @@ class PipelineOrchestrator:
                 "reflections_generated": self.session.reflections_generated,
                 "pairs_compiled": self.session.pairs_compiled,
                 "total_batches": self.session.total_batches,
-                "completed_at": self.session.completed_at.isoformat() if self.session.completed_at else None,
+                "completed_at": self.session.completed_at.isoformat()
+                if self.session.completed_at
+                else None,
             },
         }
 
@@ -331,8 +334,10 @@ class PipelineOrchestrator:
         from src.agents.hypothesis_agent import HypothesisGenerationAgent
 
         agent = HypothesisGenerationAgent(
-            llm=self.llm,
-            temperature=temperature if temperature is not None else self.config.hypothesis_agent.temperature,
+            llm=self.llm_json,
+            temperature=temperature
+            if temperature is not None
+            else self.config.hypothesis_agent.temperature,
             top_p=self.config.hypothesis_agent.top_p,
             max_tokens=self.config.hypothesis_agent.max_tokens,
             num_generations_per_prompt=self.config.hypothesis_agent.num_generations_per_prompt,
@@ -345,7 +350,11 @@ class PipelineOrchestrator:
             batch_n = min(batch_size, num_hypotheses - batch_start)
 
             # Enrich seed prompt with RAG context
-            seed = seed_prompts[self.session.current_batch] if seed_prompts and self.session.current_batch < len(seed_prompts) else None
+            seed = (
+                seed_prompts[self.session.current_batch]
+                if seed_prompts and self.session.current_batch < len(seed_prompts)
+                else None
+            )
             if self.rag and seed:
                 enriched = self.rag.enrich_prompt(
                     base_prompt=seed,
@@ -374,7 +383,17 @@ class PipelineOrchestrator:
             )
 
             if not batch_hypotheses:
-                logger.warning("Empty batch at iteration {}/{}", self.session.current_batch, self.session.total_batches)
+                logger.warning(
+                    "Empty batch at iteration {}/{}",
+                    self.session.current_batch,
+                    self.session.total_batches,
+                )
+
+            if self.config.pipeline.rate_limit_delay > 0:
+                logger.debug("Rate limit delay: {:.1f}s", self.config.pipeline.rate_limit_delay)
+                import time
+
+                time.sleep(self.config.pipeline.rate_limit_delay)
 
         return all_hypotheses
 
@@ -387,7 +406,9 @@ class PipelineOrchestrator:
         if self.rag is None:
             return
 
-        passed = [(h, r) for h, r in zip(hypotheses, results) if r.status == VerificationStatus.PASSED]
+        passed = [
+            (h, r) for h, r in zip(hypotheses, results) if r.status == VerificationStatus.PASSED
+        ]
         if not passed:
             return
 
@@ -400,9 +421,7 @@ class PipelineOrchestrator:
         except Exception as e:
             logger.warning("RAG indexing failed: {}", e)
 
-    def _verify_hypotheses(
-        self, hypotheses: list[ReactionHypothesis]
-    ) -> list[VerificationResult]:
+    def _verify_hypotheses(self, hypotheses: list[ReactionHypothesis]) -> list[VerificationResult]:
         """Run verification agent on all hypotheses."""
         from src.agents.verification_agent import VerificationAgent
 
@@ -598,9 +617,7 @@ class PipelineOrchestrator:
 
         try:
             conn = sqlite3.connect(str(self._db_path))
-            cursor = conn.execute(
-                "SELECT value FROM checkpoint WHERE key = ?", ("session_state",)
-            )
+            cursor = conn.execute("SELECT value FROM checkpoint WHERE key = ?", ("session_state",))
             row = cursor.fetchone()
             conn.close()
 

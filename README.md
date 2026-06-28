@@ -74,12 +74,13 @@ Custom implementation following the Maestro CARL (AIRI Institute) Event-Action-R
 - **Step 4**: Causal synthesis (merged explanation + actionable fix)
 - Steps 1–3 run in parallel via DAG engine, Step 4 synthesizes
 
-### Dataset (v1.0)
+### Dataset (v2.0 — 181 pairs)
 
-- **110 DPO pairs** (81 train / 6 val / 23 test), published on HuggingFace
-- 187 unique molecules, 87.9% Tanimoto diversity
-- 13 distinct reaction types, 72.8% causal reflection coverage
-- Avg quality score: 0.636 (6-dimension rubric)
+- **181 DPO pairs** (136 train / 45 test), published on HuggingFace
+- 19 distinct reaction types spanning amide coupling, Diels-Alder, Suzuki, Heck, Wittig, and more
+- Avg quality score: 0.650 (6-dimension rubric)
+- 82.6% pass rate across 253 hypotheses (v1+v2 combined)
+- Self-bootstrapping with cosine annealing (1.0→0.3) across 3 iterations
 
 ### Benchmarks
 

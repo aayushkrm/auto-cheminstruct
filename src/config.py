@@ -93,6 +93,7 @@ class PipelineConfig(BaseModel):
     temperature_max: float = 1.0
     temperature_min: float = 0.3
     bootstrap_iterations: int = 1
+    rate_limit_delay: float = 0.0
 
     @field_validator("batch_size")
     @classmethod
@@ -132,9 +133,7 @@ def load_config(config_path: str | None = None) -> AutoChemConfig:
     cfg_path = Path(config_path)
     if not cfg_path.exists():
         available = list(CONFIG_DIR.glob("*.yaml"))
-        raise ConfigurationError(
-            f"Config file not found: {config_path}. Available: {available}"
-        )
+        raise ConfigurationError(f"Config file not found: {config_path}. Available: {available}")
 
     try:
         omega_conf = OmegaConf.load(config_path)

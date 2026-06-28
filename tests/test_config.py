@@ -34,7 +34,7 @@ class TestConfig:
 
     def test_provider_config_switch(self):
         config = load_config()
-        assert config.llm.model == "accounts/fireworks/models/deepseek-v3p2"
+        assert config.llm.model == "accounts/fireworks/models/minimax-m3"
 
     def test_missing_config_file(self):
         with pytest.raises(ConfigurationError):

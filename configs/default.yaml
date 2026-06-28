@@ -12,12 +12,13 @@ pipeline:
   temperature_max: 1.0
   temperature_min: 0.3
   bootstrap_iterations: 1
+  rate_limit_delay: 8
 
 llm:
   provider: fireworks
-  model: accounts/fireworks/models/deepseek-v3p2
+  model: accounts/fireworks/models/minimax-m3
   base_url: https://api.fireworks.ai/inference/v1
-  api_key: fw_CTwhwhvf1SJHJicQAi2CCc
+  api_key: fw_N9QGJewmrH5eoq1fvjQp6r
   temperature: 0.8
   max_tokens: 4096
   request_timeout: 180

@@ -14,18 +14,18 @@ from src.config import AutoChemConfig
 def create_llm(config: AutoChemConfig, **kwargs) -> ChatOpenAI:
     """Create a LangChain ChatOpenAI instance from AutoChemConfig.
 
-    Uses Fireworks AI as the provider (OpenAI-compatible).
-
     Args:
         config: Validated AutoChemConfig.
         **kwargs: Override for temperature, max_tokens, model, etc.
+                  Use json_mode=True for response_format=json_object.
 
     Returns:
         Configured ChatOpenAI instance.
     """
     llm_cfg = config.llm
+    json_mode = kwargs.pop("json_mode", False)
 
-    params = {
+    params: dict = {
         "model": llm_cfg.model,
         "base_url": llm_cfg.base_url,
         "api_key": llm_cfg.api_key or "not-needed",
@@ -34,6 +34,10 @@ def create_llm(config: AutoChemConfig, **kwargs) -> ChatOpenAI:
         "timeout": llm_cfg.request_timeout,
         "max_retries": 3,
     }
+
+    if json_mode:
+        params["model_kwargs"] = {"response_format": {"type": "json_object"}}
+
     params.update(kwargs)
 
     return ChatOpenAI(**params)
