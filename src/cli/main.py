@@ -11,8 +11,6 @@ Commands:
 
 from __future__ import annotations
 
-import sys
-from typing import Optional
 from uuid import UUID
 
 import typer
@@ -34,8 +32,10 @@ console = Console()
 @app.command()
 def generate(
     num_hypotheses: int = typer.Option(10, "--num", "-n", help="Number of hypotheses to generate"),
-    temperature: Optional[float] = typer.Option(None, "--temperature", "-t", help="LLM temperature override"),
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
+    temperature: float | None = typer.Option(
+        None, "--temperature", "-t", help="LLM temperature override"
+    ),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
 ):
     """Generate reaction hypotheses using the Hypothesis Agent."""
     config = load_config(config_path)
@@ -71,8 +71,8 @@ def generate(
 
 @app.command()
 def verify(
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
-    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: str | None = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
     list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Verify previously generated hypotheses (load from checkpoint)."""
@@ -84,7 +84,9 @@ def verify(
         return
 
     if not session:
-        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        console.print(
+            "[yellow]No --session specified. Use --list to see available sessions.[/yellow]"
+        )
         return
 
     try:
@@ -101,8 +103,8 @@ def verify(
 
 @app.command()
 def reflect(
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
-    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: str | None = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
     list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Generate reflection traces for failed reactions."""
@@ -114,7 +116,9 @@ def reflect(
         return
 
     if not session:
-        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        console.print(
+            "[yellow]No --session specified. Use --list to see available sessions.[/yellow]"
+        )
         return
 
     try:
@@ -130,8 +134,8 @@ def reflect(
 
 @app.command()
 def compile(
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
-    session: Optional[str] = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
+    session: str | None = typer.Option(None, "--session", "-s", help="Session UUID to resume"),
     list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Compile verified data into DPO/RLHF preference pairs."""
@@ -143,7 +147,9 @@ def compile(
         return
 
     if not session:
-        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        console.print(
+            "[yellow]No --session specified. Use --list to see available sessions.[/yellow]"
+        )
         return
 
     try:
@@ -160,11 +166,15 @@ def compile(
 
 @app.command()
 def pipeline(
-    num_hypotheses: int = typer.Option(100, "--num-hypotheses", "-n", help="Number of hypotheses to generate"),
-    batch_size: Optional[int] = typer.Option(None, "--batch-size", "-b", help="Batch size override"),
-    bootstrap_iterations: int = typer.Option(1, "--bootstrap", "-B", help="Self-bootstrapping iterations (1=off, 2+=on)"),
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
-    seed: Optional[int] = typer.Option(None, "--seed", "-s", help="Random seed override"),
+    num_hypotheses: int = typer.Option(
+        100, "--num-hypotheses", "-n", help="Number of hypotheses to generate"
+    ),
+    batch_size: int | None = typer.Option(None, "--batch-size", "-b", help="Batch size override"),
+    bootstrap_iterations: int = typer.Option(
+        1, "--bootstrap", "-B", help="Self-bootstrapping iterations (1=off, 2+=on)"
+    ),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
+    seed: int | None = typer.Option(None, "--seed", "-s", help="Random seed override"),
 ):
     """Run the full Auto-ChemInstruct pipeline end-to-end."""
     config = load_config(config_path)
@@ -182,7 +192,9 @@ def pipeline(
     console.print(f"Target hypotheses: {num_hypotheses}")
     console.print(f"Batch size: {config.pipeline.batch_size}")
     if bootstrap_iterations > 1:
-        console.print(f"[green]Self-bootstrapping: [bold]{bootstrap_iterations} iterations[/bold][/green]")
+        console.print(
+            f"[green]Self-bootstrapping: [bold]{bootstrap_iterations} iterations[/bold][/green]"
+        )
     console.print()
 
     result = orch.run_pipeline(
@@ -203,7 +215,10 @@ def pipeline(
     table.add_row("Failed Verification", str(summary["hypotheses_failed"]))
     table.add_row("Reflection Traces", str(summary["reflections_generated"]))
     table.add_row("Preference Pairs", str(summary["pairs_compiled"]))
-    table.add_row("Pass Rate", f"{summary['hypotheses_passed'] / max(1, summary['hypotheses_generated']) * 100:.1f}%")
+    table.add_row(
+        "Pass Rate",
+        f"{summary['hypotheses_passed'] / max(1, summary['hypotheses_generated']) * 100:.1f}%",
+    )
     table.add_row("Session ID", str(result["session_id"]))
 
     console.print(table)
@@ -216,17 +231,42 @@ def pipeline(
 @app.command()
 def ablation(
     num_hypotheses: int = typer.Option(5, "--num-hypotheses", "-n", help="Hypotheses per variant"),
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
-    output_dir: Optional[str] = typer.Option(None, "--output", "-o", help="Output directory for reports"),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
+    output_dir: str | None = typer.Option(
+        None, "--output", "-o", help="Output directory for reports"
+    ),
+    mode: str = typer.Option(
+        "pipeline",
+        "-m",
+        "--mode",
+        help="Ablation mode: pipeline (4 variants) or evolution (7 variants)",
+    ),
 ) -> None:
-    """Run ablation study comparing all architectural variants.
+    """Run ablation study comparing architectural variants.
 
-    Variants: Baseline → Bootstrap-Only → Temp-Schedule-Only → Full-System
+    pipeline: Baseline → Bootstrap-Only → Temp-Schedule-Only → Full-System
+    evolution: 7 variants including MAP-Elites, CARL, and combined.
     """
-    from src.benchmarks.ablation import run_full_ablation
-
     config = load_config(config_path)
     setup_logging(level=config.logging.level)
+
+    if mode == "evolution":
+        from src.benchmarks.evolution_ablation import run_evolution_ablation
+
+        console.print("[bold blue]Evolution Ablation Study (7 variants)[/bold blue]")
+        output = output_dir or "benchmarks"
+        report = run_evolution_ablation(
+            config=config,
+            generations=5,
+            output_dir=output,
+        )
+        console.print()
+        console.print("[bold green]Evolution Ablation Complete![/bold green]")
+        console.print(report.summary_table())
+        console.print(f"\nReport saved to: [bold]{output}/evolution_ablation.json[/bold]")
+        return
+
+    from src.benchmarks.ablation import run_full_ablation
 
     console.print("[bold blue]Auto-ChemInstruct Ablation Study[/bold blue]")
     console.print(f"LLM Provider: [cyan]{config.llm.provider}[/cyan] ({config.llm.model})")
@@ -250,7 +290,7 @@ def ablation(
 @app.command()
 def chemcot(
     dataset_dir: str = typer.Option(..., "--dataset", "-d", help="Path to dataset directory"),
-    output_file: Optional[str] = typer.Option(None, "--output", "-o", help="Output JSON file path"),
+    output_file: str | None = typer.Option(None, "--output", "-o", help="Output JSON file path"),
 ) -> None:
     """Compare compiled dataset against ChemCoTBench metrics."""
     from src.benchmarks.chemcot_comparison import compare_to_chemcot
@@ -269,7 +309,7 @@ def chemcot(
 
 @app.command()
 def config_cmd(
-    config_path: Optional[str] = typer.Option(None, "--config", "-c", help="Path to config file"),
+    config_path: str | None = typer.Option(None, "--config", "-c", help="Path to config file"),
 ):
     """Show the current configuration."""
     config = load_config(config_path)
@@ -277,17 +317,22 @@ def config_cmd(
     console.print("[bold]Auto-ChemInstruct Configuration[/bold]")
     console.print(f"[bold]LLM:[/bold] {config.llm.provider} → {config.llm.model}")
     console.print(f"[bold]Provider URL:[/bold] {config.llm.base_url}")
-    console.print(f"[bold]Pipeline:[/bold] batch={config.pipeline.batch_size}, seed={config.pipeline.seed}")
-    console.print(f"[bold]Chemistry:[/bold] xTB={'enabled' if config.verification_agent.enable_xtb else 'disabled'}")
+    console.print(
+        f"[bold]Pipeline:[/bold] batch={config.pipeline.batch_size}, seed={config.pipeline.seed}"
+    )
+    console.print(
+        f"[bold]Chemistry:[/bold] xTB={'enabled' if config.verification_agent.enable_xtb else 'disabled'}"
+    )
 
     import json as json_module
+
     console.print("\n[bold]Full config:[/bold]")
     console.print_json(json_module.dumps(config.model_dump(), indent=2, default=str))
 
 
 @app.command()
 def status(
-    session_id: Optional[str] = typer.Option(None, "--session", "-s", help="Session ID to check"),
+    session_id: str | None = typer.Option(None, "--session", "-s", help="Session ID to check"),
     list_sessions: bool = typer.Option(False, "--list", "-l", help="List available sessions"),
 ):
     """Check pipeline status."""
@@ -296,7 +341,9 @@ def status(
         return
 
     if not session_id:
-        console.print("[yellow]No --session specified. Use --list to see available sessions.[/yellow]")
+        console.print(
+            "[yellow]No --session specified. Use --list to see available sessions.[/yellow]"
+        )
         return
 
     try:
