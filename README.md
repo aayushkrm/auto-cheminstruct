@@ -5,8 +5,7 @@
 [![HuggingFace](https://img.shields.io/badge/🤗-Dataset-yellow)](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-121%2F121-brightgreen)](https://github.com/aayushkrm/auto-cheminstruct)
-[![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
+[![Tests](https://img.shields.io/badge/tests-230%2F230-brightgreen)](https://github.com/aayushkrm/auto-cheminstruct)
 
 > Internship: TSU Laboratory of AI in Chemistry & Molecular Engineering × AIRI Institute
 >
@@ -14,74 +13,84 @@
 
 ---
 
-An autonomous multi-agent pipeline that generates **physically-validated instruction data** for chemistry domain-specific language models. Each reaction hypothesis is structurally verified (RDKit), energetically validated (MMFF94 force fields), and causally analyzed on failure — producing RLHF/DPO preference pairs with rich reasoning traces.
+An autonomous multi-agent pipeline that generates **physically-validated instruction data** for chemistry DSLMs. Reaction hypotheses are structurally verified (RDKit), energetically validated (MMFF94), causally analyzed on failure via 4-step reasoning chains, and refined through MAP-Elites evolutionary search — producing DPO preference pairs without human annotation.
 
 ## Architecture
 
 ```
-Hypothesis Agent → Verification Agent (RDKit + MMFF94) ──PASS→ Compilation Agent → DPO Pairs
-        ↑                         │                                          │
-        │                         └──FAIL→ Reflection Agent ─────────────────┘
-        │                                      │
-        └────── Learning Context ←─────────────┘
-              (Self-Bootstrapping Loop)
+                         ┌─────────────────────────────────┐
+                         │  MAP-Elites Evolutionary Search  │
+                         │  26×10×10 grid, 5 mutation ops  │
+                         │  4 specialist islands            │
+                         └──────────────┬──────────────────┘
+                                        │
+    Hypothesis Agent ──→ Verify (RDKit+MMFF94) ──PASS→ Compile → DPO Pairs
+          ↑                       │
+          │                       └──FAIL→ CARL Reflection Chain
+          │                           Steric → Electronic → Thermo → Synthesis
+          │                                       │
+          └─────────── LearningContext ←──────────┘
+                (Self-Bootstrapping Loop)
 ```
 
-### Core Innovation: Self-Bootstrapping Learning Loop
+## Implementation Phases
 
-```
-Generate → Verify → Reflect → Accumulate → Repeat (with learned constraints)
-```
+| Phase | Commit | Tests | Key Deliverables |
+|-------|--------|-------|------------------|
+| **I: Foundation** | `df5a2ca` | 140 | Redis state layer, 5 Hydra YAML configs, problem directory (5 seed reactions, validate.py, metrics.yaml) |
+| **II: DAG Engine** | `a522fb5` | 163 | Async DAGPipeline, Kahn topological sort, semaphore-bounded parallelism, 8 Pydantic I/O models, 4 agent factory functions |
+| **III: MAP-Elites** | `1467e7e` | 202 | 2,600-cell behavior grid, 5 weighted mutation operators, 4 specialist islands with migration, seeding + stagnation convergence, deterministic RNG |
+| **IV: CARL Chains** | `f5d3dcf` | 219 | 4-step parallel DAG reflection (StericAnalysis → ElectronicAnalysis → ThermodynamicAnalysis → CausalSynthesis), CARLReflectionAgent, batch filtering |
+| **V: Ablation + Paper** | `1834c45` | **230** | 7-variant evolution ablation, CLI `--mode evolution`, updated NeurIPS paper with evolution results |
 
-Failed reactions are analyzed for root causes (10 failure categories), which are accumulated into a LearningContext and injected as constraints back into the hypothesis agent's prompt. Temperature cosine annealing (1.0→0.3) drives exploration→exploitation across bootstrap iterations.
-
-## What's Completed
+## What's Built
 
 ### Core Pipeline (4 Agents)
 
-| Component | Description | Status |
-|---|---|---|
-| **Hypothesis Agent** | LLM-based generation of diverse chemical reactions (19 named types) | ✅ |
-| **Verification Agent** | RDKit structural validation + MMFF94 energetic validation + feasibility checks | ✅ |
-| **Reflection Agent** | 10 failure categories, structured causal analysis, LearningContext injection | ✅ |
-| **Compilation Agent** | DPO preference pairs (chosen=passed, rejected=failed+reflection), 6-dim quality scoring | ✅ |
-| **Orchestrator** | SQLite checkpoints, full state machine, bootstrap loop, RAG enrichment | ✅ |
+| Component | Description |
+|---|---|
+| **Hypothesis Agent** | LLM-based generation of diverse chemical reactions (19 named types) with RAG enrichment |
+| **Verification Agent** | RDKit structural validation, MMFF94 energetics, chemical feasibility filtering |
+| **Reflection Agent** | CARL 4-step causal decomposition (steric/electronic/thermodynamic/causal synthesis) |
+| **Compilation Agent** | DPO preference pairs (chosen=passed, rejected=failed+reflection), 6-dim quality scoring |
+| **Pipeline Orchestrator** | SQLite checkpoints, bootstrap loop, temperature cosine annealing (1.0→0.3) |
+
+### MAP-Elites Evolutionary Search
+
+Custom implementation following the GigaEvo (AIRI, arXiv:2511.17592) architecture pattern:
+
+- **Behavior grid**: 26 reaction types × 10 MW bins × 10 fitness bins = 2,600 cells
+- **5 mutation operators**: Reactant substitution, condition optimization, reaction crossover, scaffold hopping, insight-guided
+- **4 specialist islands**: Diversity, Quality, Novelty, Yield — with conservative migration
+- **Convergence**: Stagnation detection (10 gens) + coverage threshold (5%)
+
+### CARL Reasoning Chains
+
+Custom implementation following the Maestro CARL (AIRI Institute) Event-Action-Result pattern:
+
+- **Step 1**: Steric analysis (van der Waals, Baldwin's rules, eclipsing)
+- **Step 2**: Electronic analysis (HOMO-LUMO, electrophilicity, HSAB)
+- **Step 3**: Thermodynamic & kinetic analysis (enthalpy/entropy, competing pathways)
+- **Step 4**: Causal synthesis (merged explanation + actionable fix)
+- Steps 1–3 run in parallel via DAG engine, Step 4 synthesizes
 
 ### Dataset (v1.0)
 
 - **110 DPO pairs** (81 train / 6 val / 23 test), published on HuggingFace
-- 187 unique molecules, 87.9% Tanimoto diversity, 33.2% scaffold diversity
+- 187 unique molecules, 87.9% Tanimoto diversity
 - 13 distinct reaction types, 72.8% causal reflection coverage
 - Avg quality score: 0.636 (6-dimension rubric)
 
-### Benchmarking
+### Benchmarks
 
-- **Ablation study** (N=8/variant): Full-System vs No-Bootstrap vs No-Reflection vs No-RAG
-  - Bootstrap → 2.5× more pairs (volume driver)
-  - Reflection → +15.4% quality improvement (grounding driver)
-  - RAG → +7.5 pp pass rate (accuracy driver)
-- **ChemCoTBench comparison** module for standardized evaluation
-- **121/121 tests passing** (unit + integration + RAG + quality + feasibility + temperature)
+- **Pipeline ablation** (4 variants): Bootstrap → 2.5× pairs, Reflection → +15.4% quality, RAG → +7.5pp pass rate
+- **Evolution ablation** (7 variants): Full-System achieves 3.5× elites, +1.0% coverage, +17% pass rate vs Baseline
+- **ChemCoTBench comparison**: Match molecular diversity of human-annotated 1,495-sample dataset
+- **230/230 tests passing**
 
-### Paper (NeurIPS LaTeX)
+### Paper
 
-Complete scaffold with:
-- Real ablation results in tables
-- ChemCoTBench comparison
-- Related work with ChemCrow, Coscientist, GigaEvo, AlphaEvolve, MAP-Elites citations
-- arXiv submission package ready (`arxiv_submission.tar.gz`)
-
-### External Tool Evaluations
-
-27 research documents covering integration analysis of AIRI ecosystem tools:
-
-| Tool | Repository | Assessment | Docs |
-|---|---|---|---|
-| **GigaEvo** | [AIRI-Institute/gigaevo-core](https://github.com/AIRI-Institute/gigaevo-core) | ✅ Integrate — replaces simple bootstrap with MAP-Elites evolutionary search | `docs/research/gigaevo_*.md` (12 files) |
-| **Maestro (CARL)** | [AIRI-Institute/maestro-core](https://github.com/AIRI-Institute/maestro-core) | ✅ Integrate CARL — structures Reflection Agent as formal reasoning chains | `docs/research/maestro_*.md` (5 files) |
-| **GigaChain** | [ai-forever/gigachain](https://github.com/ai-forever/gigachain) | ❌ Skip — GigaChat-specific, no alignment with Fireworks LLM | `docs/research/langchain_gigachat*.md` (3 files) |
-| **ChemCrow** | [ur-whitelab/chemcrow-public](https://github.com/ur-whitelab/chemcrow-public) | 📄 Cite only — single-agent, no reflection/verification | `docs/research/chemcrow_public.md` |
-| **AiZynthFinder** | [MolecularAI/aizynthfinder](https://github.com/MolecularAI/aizynthfinder) | ❌ Skip — retrosynthesis direction (product→reactants), opposite of our forward generation | `docs/research/aizynthfinder.md` |
+NeurIPS LaTeX scaffold with ablation tables, ChemCoTBench comparison, GigaEvo + AlphaEvolve + MAP-Elites citations, 6-dim quality scoring analysis.
 
 ## Quick Start
 
@@ -92,11 +101,11 @@ cd auto-cheminstruct && uv sync
 # Run pipeline (full system, 5 hypotheses, 3 bootstrap iterations)
 uv run python -m src.cli.main pipeline -n 5 -B 3
 
-# Run scaled pipeline (20 hypotheses)
-uv run python -m src.cli.main pipeline -n 20
-
-# Run ablation study (all 4 variants)
+# Run pipeline-level ablation (4 variants)
 uv run python -m src.cli.main ablation -n 8 -o benchmarks
+
+# Run evolution-level ablation (7 variants)
+uv run python -m src.cli.main ablation -m evolution -o benchmarks
 
 # Compare against ChemCoTBench
 uv run python -m src.cli.main chemcot -d datasets/autochem-merged/
@@ -104,60 +113,40 @@ uv run python -m src.cli.main chemcot -d datasets/autochem-merged/
 # Run tests
 uv run pytest
 
-# Type check
-uv run mypy src/
-
-# Docker
-docker build -t auto-cheminstruct .
+# View config
+uv run python -m src.cli.main config-cmd
 ```
-
-## In Progress / Next Up
-
-### Current Integration Sprint
-
-1. **GigaEvo Integration** — Replace simple temperature-scheduled bootstrap with proper MAP-Elites evolutionary search:
-   - Wrapping our 4 agents as GigaEvo DAG stages
-   - Chemistry-specific behavior grid (pass rate × diversity × reaction type richness)
-   - LLM-driven mutation operators with insight generation
-   - Multi-island parallel evolution
-
-2. **Maestro CARL Integration** — Restructure Reflection Agent as a CARL ReasoningChain:
-   - 5–8 structured causal analysis steps (symptom → root cause → constraint → learning)
-   - DAG-parallelized reasoning with RAG context extraction
-   - Per-step LLM configuration
-
-### Pipeline
-
-- [ ] GigaEvo DAG stage wrappers (GenerateStage, VerifyStage, ReflectStage, ScoreStage)
-- [ ] Chemistry-specific MAP-Elites behavior space definition
-- [ ] Multi-island evolution strategy (pass rate island / diversity island / coverage island)
-- [ ] CARL-based Reflection Agent with structured reasoning chains
-- [ ] Run scaled experiments (100+ generations) and compare against current bootstrap baseline
-- [ ] Update paper with GigaEvo integration results
-- [ ] Submit to arXiv + Zenodo archive
 
 ## Dependencies
 
-- **Python 3.13+**, Pydantic v2 for all data models
-- **RDKit** for structural chemistry (validation, descriptors, conformers, MMFF94 force fields)
+- **Python 3.13+**, Pydantic v2
+- **RDKit** for structural chemistry (validation, descriptors, MMFF94)
 - **NetworkX** for chemical knowledge graph
-- **Loguru** for logging, **OmegaConf** for configuration
+- **Loguru** for logging, **OmegaConf + Hydra** for configuration
 - **Fireworks AI** (OpenAI-compatible) — model `accounts/fireworks/models/deepseek-v3p2`
-- **Tavily** for web research, **Firecrawl** for web scraping
+- **Redis** (optional, for distributed state)
 
-## Links
+## Research Framework Alignment
 
-- 🤗 [HuggingFace Dataset](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
-- 🏗️ [GitHub Repository](https://github.com/aayushkrm/auto-cheminstruct)
-- 📖 [Research Docs](docs/research/) (GigaEvo, Maestro, GigaChain, ChemCrow evaluations)
+Based on 27 research documents analyzing AIRI ecosystem tools:
+
+| Framework | AIRI Lab | Our Implementation |
+|-----------|----------|-------------------|
+| **GigaEvo** (evolutionary search) | `AIRI-Institute/gigaevo-core` | `src/evolution/map_elites.py` — 2,600-cell MAP-Elites, 5 mutation ops, 4 islands |
+| **Maestro CARL** (reasoning chains) | `AIRI-Institute/maestro-core` / `mmar-carl` | `src/carl/chain.py` — 4-step parallel DAG reflection, Event-Action-Result pattern |
+| **DAG Engine** | GigaEvo async pipeline | `src/evolution/dag.py` — Kahn sort, asyncio semaphore, failure propagation |
+| **Redis Store** | GigaEvo persistence | `src/evolution/redis_store.py` — JSON storage, atomic counters, in-memory fallback |
+
+Detailed research: `docs/maestro-gigachain-gigaevo-research.md`, `docs/gigaevo-integration-blueprint.md`
 
 ## Citation
 
 ```bibtex
-@misc{auto-cheminstruct-2025,
-  author = {Kumar, Aayush and ...},
-  title = {Auto-ChemInstruct: Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models in Chemistry},
-  year = {2025},
+@misc{auto-cheminstruct-2026,
+  author = {Kumar, Aayush},
+  title = {Auto-ChemInstruct: Agent-Driven Synthesization of RLHF Data
+           for Domain-Specific Language Models in Chemistry},
+  year = {2026},
   publisher = {GitHub},
   url = {https://github.com/aayushkrm/auto-cheminstruct}
 }
