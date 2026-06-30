@@ -162,20 +162,27 @@ src/
 
 ## GigaEvo + Maestro CARL Integration
 
-Custom-built implementations following AIRI's published architecture patterns (both frameworks researched via 27 scraped documentation pages in `docs/research/`).
+Custom-built implementations following AIRI's published architecture patterns. Framework research covers 27 scraped documentation pages in `docs/research/`.
+
+| Framework | AIRI Repository | Our Implementation |
+|-----------|----------------|-------------------|
+| **GigaEvo** | [FusionBrainLab/gigaevo-core](https://github.com/FusionBrainLab/gigaevo-core) (arXiv:2511.17592, 115+ ★) | `src/evolution/map_elites.py` — 2,600-cell grid, 5 mutation ops, 4 islands |
+| **Maestro CARL** | [AIRI-Institute/maestro-core](https://github.com/AIRI-Institute/maestro-core) (MIT) | `src/carl/chain.py` — 4-step parallel DAG reflection, Event-Action-Result pattern |
+
+### Component Mapping
 
 | GigaEvo Component | Our Implementation | Lines |
 |---|---|---|
 | Redis Database | `src/evolution/redis_store.py` | 229 |
 | Async DAG Engine | `src/evolution/dag.py` | 293 |
-| MAP-Elites Evolution | `src/evolution/map_elites.py` | 491 |
+| MAP-Elites Evolution Engine | `src/evolution/map_elites.py` | 491 |
 | Problem Interface | `problems/autochem/` | 349 |
 
 | Maestro CARL Component | Our Implementation | Lines |
 |---|---|---|
 | Event-Action-Result Chains | `src/carl/chain.py` | 463 |
 | StepDescription / ReasoningChain | `CARLChain` with `DAGPipeline` | — |
-| Parallel DAG Execution | Steps 1-3 run in parallel | — |
+| Parallel DAG Execution | Steps 1–3 run in parallel | — |
 
 ---
 
