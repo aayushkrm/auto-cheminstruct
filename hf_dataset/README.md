@@ -34,9 +34,13 @@ configs:
 
 **Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models in Chemistry**
 
-An autonomous, self-verifying multi-agent pipeline that generates physically-validated DPO/RHLF preference pairs for chemistry instruction tuning.
+> Internship: TSU Lab of AI in Chemistry × AIRI Institute (Moscow, Russia)
+>
+> **Dataset v2.0** — 181 pairs across 19 reaction types
 
-## Dataset Stats
+An autonomous, self-verifying multi-agent pipeline that generates physically-validated DPO/RLHF preference pairs for chemistry instruction tuning. Built on AIRI's [GigaEvo](https://github.com/FusionBrainLab/gigaevo-core) (MAP-Elites evolutionary search, arXiv:2511.17592) and [Maestro CARL](https://github.com/AIRI-Institute/maestro-core) (structured reasoning chains) frameworks.
+
+## Dataset Stats (v2.0)
 
 | Metric | Value |
 |---|---|
@@ -93,6 +97,11 @@ Auto-ChemInstruct uses a 4-agent pipeline with MAP-Elites evolutionary search an
 4. **Compilation Agent** — DPO preference pairs with 6-dim quality scoring
 
 The pipeline includes a self-bootstrapping loop with cosine temperature annealing (1.0→0.3) and MAP-Elites evolutionary optimization across a 2,600-cell behavior grid.
+
+### Framework References
+
+- [GigaEvo](https://github.com/FusionBrainLab/gigaevo-core) (AIRI Institute, arXiv:2511.17592) — MAP-Elites quality-diversity optimization, async DAG execution engine, LLM-driven mutation operators
+- [Maestro CARL](https://github.com/AIRI-Institute/maestro-core) (AIRI Institute) — Collaborative Agent Reasoning Library, Event-Action-Result reasoning chains, parallel DAG decomposition
 
 ## Citation
 
