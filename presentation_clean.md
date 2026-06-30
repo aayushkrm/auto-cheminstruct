@@ -59,6 +59,45 @@ This is what separates our system from everything else.
 
 ---
 
+# The Data: What We Actually Produced
+
+Our pipeline generated **172 DPO preference pairs** — each pair teaches AI both what works and what fails.
+
+**What a training pair looks like:**
+
+| Component | Example |
+|---|---|
+| **Prompt** | "Propose a Suzuki coupling reaction to synthesize a biaryl compound" |
+| **Chosen (correct)** | Full reaction: SMILES, conditions (Pd catalyst, 80°C, THF), mechanism steps, 85% yield estimate |
+| **Rejected (incorrect)** | Failed reaction + **causal analysis**: "Nucleophilic attack blocked by steric hindrance from tert-butyl group. Transition state impossible. Fix: smaller electrophile or SN1." |
+
+**Dataset stats:**
+
+| | |
+|---|---|
+| Training pairs | 124 |
+| Validation pairs | 6 |
+| Test pairs | 42 |
+| **Total** | **172** |
+| Reaction types | 19 (Suzuki, Diels-Alder, Heck, Wittig, etc.) |
+| Quality score | 0.650 average on 6-dimension rubric |
+| Pass rate | 67% across 256 total hypotheses |
+
+**Why this data is useful:**
+
+Every existing chemistry dataset is **pass-only** — showing correct reactions but never explaining failures. Our data is different. Each rejected pair includes a **causal explanation** of exactly why the reaction fails and how to fix it. When you train a chemistry language model on this data, it learns:
+
+- What a valid reaction looks like (structure, conditions, yield)
+- **Why** a proposed reaction fails (steric, electronic, thermodynamic reasons)
+- How to **avoid** failures in future proposals
+- The chemical principles behind the success or failure
+
+This is exactly the format needed for RLHF and DPO training — the same techniques used to align ChatGPT and Claude, but applied to chemistry.
+
+**Live on HuggingFace:** `aayushkrm/autochem-instruct`
+
+---
+
 # Two Key Innovations
 
 ## MAP-Elites Evolutionary Search
@@ -84,11 +123,11 @@ When a reaction fails, instead of one vague question ("why did this fail?"), we 
 
 # What We Achieved
 
-**The Pipeline** — Fully autonomous. 230 automated tests. Zero human intervention needed.
+**The Pipeline** — 4 AI agents working autonomously. 230 automated tests. 7,500 lines of code. Zero human annotation needed.
 
-**The Dataset** — 172 training pairs covering 19 reaction types, published on HuggingFace for anyone to use.
+**The Dataset** — 172 training pairs covering 19 reaction types. Every failure includes a causal explanation — not just "this didn't work" but "this failed because of steric hindrance at the C4 position, try a smaller electrophile." Published on HuggingFace, ready for anyone to use for RLHF or DPO training.
 
-**The Proof** — We tested 7 different configurations to prove every component matters:
+**The Proof** — 7 different configurations tested to prove every component matters:
 
 | Configuration | Results |
 |---|---|
