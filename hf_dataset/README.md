@@ -40,27 +40,28 @@ An autonomous, self-verifying multi-agent pipeline that generates physically-val
 
 | Metric | Value |
 |---|---|
-| Total pairs | **110** |
-| Splits | 81 train / 6 val / 23 test |
-| Reaction types | 13 distinct |
-| Unique molecules | 187 |
-| Tanimoto diversity | 0.879 |
-| Scaffold diversity | 33.2% |
-| Avg quality score | 0.636 (6-dim rubric) |
-| Reflection coverage | 72.8% |
+| Total pairs | **181** |
+| Splits | 130 train / 6 val / 45 test |
+| Reaction types | 19 distinct |
+| Avg quality score | 0.650 (6-dim rubric) |
+| Pass rate | 71.5% (253 total hypotheses) |
+| Self-bootstrapping | 3 iterations, cosine annealing (1.0→0.3) |
 
-## Ablation Results
+## Ablation Results (7-variant evolution study)
 
-| Variant | Pairs | Pass% | Diversity | Quality |
-|---|---|---|---|---|
-| **Full-System** | 15 | 78.9% | 0.877 | **0.653** |
-| No-Bootstrap | 6 | 100% | **0.901** | 0.576 |
-| No-Reflection | 17 | 89.5% | 0.878 | 0.568 |
-| No-RAG | 15 | 71.4% | 0.876 | 0.660 |
+| Variant | Elites | Coverage | Pass Rate | Quality |
+|---------|--------|----------|-----------|---------|
+| **Full-System** (ME + CARL + Bootstrap + RAG + Reflection) | 25 | 1.0% | **84.6%** | **0.72** |
+| Baseline | 10 | 0.4% | 69.0% | 0.59 |
+| MAP-Elites-Only | 24 | 0.9% | 75.0% | 0.60 |
+| CARL-Only | 15 | 0.4% | 78.8% | 0.67 |
+| No-Reflection | 10 | 0.4% | 66.3% | 0.59 |
+| No-RAG | 13 | 0.4% | 68.0% | 0.65 |
+| Bootstrap-Only | 11 | 0.4% | 68.9% | 0.61 |
 
-- **Bootstrap** → 2.5× more pairs
-- **Reflection** → +15.4% quality
-- **RAG** → +7.5 pp pass rate
+- **MAP-Elites** → 2.5× more elites (population)
+- **CARL** → +14% pass rate (quality)
+- **Full-System** → 3.5× elites, +17% pass rate vs Baseline
 
 ## Data Format
 
@@ -68,7 +69,7 @@ Each preference pair contains:
 - `prompt`: Instruction for the model (e.g., "Propose a Diels-Alder reaction...")
 - `chosen`: Passed reaction with mechanism, conditions, and yield
 - `rejected`: Failed reaction with causal failure analysis and reflection trace
-- `reaction_type`: One of 13 distinct named reaction types
+- `reaction_type`: One of 19 distinct named reaction types
 - `quality_score`: 6-dimensional composite score (0-1)
 
 ## Usage
@@ -84,14 +85,14 @@ print(dataset["train"][0]["rejected"])
 
 ## How It Was Generated
 
-Auto-ChemInstruct uses a 4-agent pipeline:
+Auto-ChemInstruct uses a 4-agent pipeline with MAP-Elites evolutionary search and CARL reasoning chains:
 
-1. **Hypothesis Agent** — LLM generates creative reaction pathways (deepseek-v3p2, T=0.9)
+1. **Hypothesis Agent** — LLM generates creative reaction pathways (MiniMax-M3, JSON mode)
 2. **Verification Agent** — RDKit structural validation + MMFF94 force-field energetics
-3. **Reflection Agent** — Causal failure analysis with chemical principles
-4. **Compilation Agent** — DPO preference pairs with quality scoring
+3. **Reflection Agent** — CARL 4-step causal analysis (Steric→Electronic→Thermo→Synthesis)
+4. **Compilation Agent** — DPO preference pairs with 6-dim quality scoring
 
-The pipeline includes a self-bootstrapping loop where failed reactions inform subsequent generations, and cosine temperature annealing (1.0→0.3) for exploration→exploitation.
+The pipeline includes a self-bootstrapping loop with cosine temperature annealing (1.0→0.3) and MAP-Elites evolutionary optimization across a 2,600-cell behavior grid.
 
 ## Citation
 

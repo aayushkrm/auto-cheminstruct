@@ -391,8 +391,6 @@ class PipelineOrchestrator:
 
             if self.config.pipeline.rate_limit_delay > 0:
                 logger.debug("Rate limit delay: {:.1f}s", self.config.pipeline.rate_limit_delay)
-                import time
-
                 time.sleep(self.config.pipeline.rate_limit_delay)
 
         return all_hypotheses
