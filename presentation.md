@@ -1,18 +1,16 @@
----
-marp: true
-theme: uncover
-class: invert
-paginate: true
-size: 16:9
+% Auto-ChemInstruct
+% Aayush Kumar
+% TSU Lab of AI in Chemistry & Molecular Engineering × AIRI Institute, Moscow
+
 ---
 
 # Auto-ChemInstruct
 
-**Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models in Chemistry**
+## Agent-Driven Synthesization of RLHF Data for Chemistry DSLMs
 
-Aayush Kumar
+**Aayush Kumar**
 
-TSU Lab of AI in Chemistry & Molecular Engineering × AIRI Institute, Moscow
+TSU Laboratory of AI in Chemistry & Molecular Engineering × AIRI Institute (Moscow)
 
 NeurIPS Datasets & Benchmarks Track
 
@@ -20,312 +18,225 @@ NeurIPS Datasets & Benchmarks Track
 
 # The Problem
 
-- **Scarcity of chemistry instruction data** — existing datasets like ChemCoTBench rely on expensive human expert annotation
-- **Positivity bias** — datasets only show what works, never explain *why reactions fail*
-- **LLM hallucination** — models generate chemically impossible reactions with no physical validation
-- **No self-improvement** — static generation with no feedback loop
+- **Scarcity of chemistry instruction data** — datasets like ChemCoTBench rely on expensive human expert annotation, limiting scale and diversity
 
-<div style="margin-top: 40px; padding: 20px; border: 2px solid #e74c3c; border-radius: 10px;">
-<b>Key Insight:</b> We can automate the verification bottleneck using computational chemistry as a deterministic oracle
-</div>
+- **Positivity bias** — existing datasets only show what works, never explain *why reactions fail*, missing critical causal reasoning
+
+- **LLM hallucination** — models generate chemically impossible reactions with no physical validation
+
+- **No self-improvement** — static generation pipeline with no feedback loop or learning from failures
+
+::: {style="border: 2px solid red; padding: 15px; margin-top: 20px;"}
+**Key Insight:** The verification bottleneck can be automated — use computational chemistry as a deterministic ground-truth oracle instead of relying on LLM self-evaluation.
+:::
 
 ---
 
 # Our Solution: 4-Agent Pipeline
 
 ```
-┌──────────┐   ┌────────────────┐   ┌───────────┐   ┌──────────┐
-│Hypothesis│──→│  Verification  │──→│Compilation│──→│   DPO    │
-│  Agent   │   │ (RDKit+MMFF94) │   │   Agent   │   │  Pairs   │
-└──────────┘   └───────┬────────┘   └───────────┘   └──────────┘
-      ↑                 │ FAIL
-      │        ┌────────┴─────────┐
-      │        │ Reflection Agent │
-      │        │  10 categories   │
-      │        └────────┬─────────┘
-      │                 │
-      └── LearningContext ◄────────┘
-        (Self-Bootstrapping Loop)
+Hypothesis Agent ──→ Verification Agent ──→ Compilation Agent ──→ DPO Pairs
+      ↑                     │
+      │              (RDKit + MMFF94)
+      │                     │ FAIL
+      │              Reflection Agent
+      │              10 Failure Categories
+      │                     │
+      └────── LearningContext ◄──────────────┘
+         Self-Bootstrapping Loop
 ```
 
-- **Hypothesis Agent**: LLM generates diverse reactions (19 types, T=0.9)
-- **Verification Agent**: RDKit cascade + MMFF94 energetics — physical ground truth
-- **Reflection Agent**: Causal failure analysis, 10 categories
-- **Compilation Agent**: DPO preference pairs, 6-dim quality scoring
+**Four specialized AI agents orchestrated through a self-bootstrapping reflection loop:**
+
+- **Hypothesis Agent** — LLM generates diverse chemical reactions (19 types, T=0.9)
+- **Verification Agent** — RDKit structural cascade + MMFF94 energetic validation — physical ground truth
+- **Reflection Agent** — Causal failure analysis with 10 categories, CARL 4-step decomposition
+- **Compilation Agent** — DPO preference pairs, 6-dimension quality scoring
 
 ---
 
 # Core Innovation: Physics-Grounded Self-Bootstrapping
 
-<div style="text-align: center; font-size: 1.5em; margin: 30px 0;">
-Generate → Verify → Reflect → Accumulate → <b>Repeat</b>
-</div>
+::: {style="text-align: center; font-size: 1.5em; margin: 20px 0;"}
+**Generate → Verify → Reflect → Accumulate → Repeat**
+:::
 
-- Unlike LLM self-evaluation (hallucinates), we couple generation with **deterministic physical simulators**
-- Failed reactions become **structured learning signals** — not wasted compute
-- **Cosine temperature annealing** (1.0→0.3) drives exploration→exploitation across 3 bootstrap iterations
+- Unlike LLM self-evaluation (which **hallucinates**), our system couples generative models with **deterministic physical simulators** as ground-truth oracles
 
-<div style="margin-top: 30px; font-size: 0.9em; background: #2c3e50; padding: 15px; border-radius: 8px;">
-<b>Example Reflection Trace:</b><br>
-"The proposed nucleophilic attack is <b>blocked by severe steric hindrance</b> from the adjacent tert-butyl group. The transition state requires an impossible geometry. Fix: use a less bulky electrophile or switch to SN1 conditions."
-</div>
+- Failed reactions are **not discarded** — they become structured learning signals that improve future generations
+
+- **Cosine temperature annealing** (1.0 → 0.3) drives exploration → exploitation across 3 bootstrap iterations
+
+> **Example Reflection Trace:**
+>
+> "The proposed nucleophilic attack is **blocked by severe steric hindrance** from the adjacent tert-butyl group. The transition state requires an impossible geometry due to van der Waals clashes. **Fix**: Use a less bulky electrophile or switch to SN1 conditions."
 
 ---
 
 # MAP-Elites Evolutionary Search (GigaEvo)
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-<div>
+**Behavior Grid: 26 reaction types × 10 MW bins × 10 fitness bins = 2,600 cells**
 
-### Behavior Grid
-- **26** reaction types
-- **10** molecular weight bins
-- **10** fitness bins
-- **= 2,600 cells**
+| Mutation Operator | Weight |
+|---|---|
+| Reactant Substitution (bioisostere replacement) | 0.25 |
+| Condition Optimization (solvent, temperature, catalyst) | 0.20 |
+| Reaction Type Crossover (combine two parent frameworks) | 0.15 |
+| Scaffold Hopping (core structure variation) | 0.15 |
+| Insight-Guided (CARL reflection trace-driven) | 0.25 |
 
-### 5 Mutation Operators
-1. Reactant substitution
-2. Condition optimization
-3. Reaction type crossover
-4. Scaffold hopping
-5. Insight-guided (CARL traces)
+| Specialist Island | Optimization Objective |
+|---|---|
+| Diversity | Chemical reaction variety |
+| Quality | High fitness scores |
+| Novelty | Unique molecular scaffolds |
+| Yield | Maximum pass rate |
 
-</div>
-<div>
-
-### 4 Specialist Islands
-
-| Island | Focus |
-|--------|-------|
-| Diversity | Reaction variety |
-| Quality | High fitness |
-| Novelty | Unique scaffolds |
-| Yield | Pass rate |
-
-- **Conservative migration**: 3 elites / 10 gens
-- **Stagnation detection**: stop at 10 gens no improvement
-- **Deterministic RNG**: full reproducibility
-
-</div>
-</div>
+**Convergence**: Stagnation detection (10 generations no improvement) | **Migration**: 3 elites every 10 generations | **RNG**: Deterministic seed for full reproducibility
 
 ---
 
 # CARL Structured Reasoning Chains (Maestro)
 
-<div style="text-align: center; margin: 20px 0;">
-
 ```
-Step 1: Steric Analysis ───┐
-Step 2: Electronic Analysis ─┤── Step 4: Causal Synthesis
-Step 3: Thermodynamic Analysis┘
+Step 1: Steric Analysis ──────────────┐
+Step 2: Electronic Analysis ──────────┤── Step 4: Causal Synthesis
+Step 3: Thermodynamic & Kinetic ──────┘
+
+     Steps 1-3 run in PARALLEL via async DAG engine
 ```
 
-*Steps 1-3 execute in **parallel** via async DAG engine*
-
-</div>
-
-| Step | Analysis | Chemistry Checks |
-|------|----------|-----------------|
-| **Steric** | van der Waals clashes, transition state geometry | Baldwin's rules, eclipsing interactions |
-| **Electronic** | HOMO-LUMO compatibility, electrophilicity | HSAB theory, nucleophile richness |
-| **Thermodynamic** | Enthalpy/entropy, competing pathways | Activation barrier feasibility |
-| **Synthesis** | Merged causal explanation + actionable fix | Confidence scoring |
+| Step | Analysis Performed | Chemistry Checks |
+|---|---|---|
+| **Steric** | van der Waals clashes, transition state geometry accessibility | Baldwin's rules, eclipsing interactions |
+| **Electronic** | Frontier orbital compatibility (HOMO-LUMO), electrophilicity/nucleophilicity | HSAB theory, charge distribution |
+| **Thermodynamic** | Enthalpy/entropy changes, competing reaction pathways | Activation barrier feasibility |
+| **Synthesis** | Merged causal explanation with actionable fix suggestion | Confidence scoring, chemical principles |
 
 ---
 
-# Implementation
+# Implementation: 5 Phases
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-<div>
+| Phase | Key Deliverables | Tests |
+|---|---|---|
+| **I: Foundation** | Redis state layer, Hydra configs, problem directory | 140 |
+| **II: DAG Engine** | Async pipeline, Kahn topological sort | 163 |
+| **III: MAP-Elites** | 2,600-cell grid, 5 mutation ops, 4 islands | 202 |
+| **IV: CARL Chains** | 4-step parallel DAG reflection, batch filtering | 219 |
+| **V: Ablation + Paper** | 7-variant evolution ablation, NeurIPS LaTeX | **230** |
 
-### 5 Phases · 37 Commits
+**Technology Stack**
 
-| Phase | Tests |
-|-------|-------|
-| I: Foundation | 140 |
-| II: DAG Engine | 163 |
-| III: MAP-Elites | 202 |
-| IV: CARL Chains | 219 |
-| V: Ablation + Paper | **230** |
-
-</div>
-<div>
-
-### Technology Stack
-
-| Layer | Tools |
-|-------|-------|
-| **LLM** | Fireworks AI (MiniMax-M3) |
-| **Agents** | LangChain, Pydantic v2 |
-| **Chemistry** | RDKit, MMFF94 |
-| **RAG** | TF-IDF, NetworkX KG |
-| **Evolution** | Custom MAP-Elites |
-| **Infra** | SQLite, Hydra, Docker |
-
-</div>
-</div>
-
-<div style="margin-top: 20px; text-align: center;">
-<b>7,530 source LOC · 2,608 test LOC · 230/230 tests passing</b>
-</div>
+| Layer | Tools & Frameworks |
+|---|---|
+| LLM | Fireworks AI (MiniMax-M3 + DeepSeek-v3p2), LangChain |
+| Agents | Pydantic v2, 4-agent hub-spoke topology |
+| Chemistry | RDKit, MMFF94 force fields (physics ground truth) |
+| RAG | TF-IDF + NetworkX knowledge graph, 140 indexed docs |
+| Evolution | Custom MAP-Elites (GigaEvo architecture pattern) |
+| Infrastructure | SQLite checkpoints, Hydra/OmegaConf, Docker, Redis |
+| Testing | 230/230 tests, 7,530 source LOC, 2,608 test LOC |
 
 ---
 
 # Dataset Results — 172 DPO Pairs
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-<div>
-
-| Metric | v1.0 | v2.0 |
-|--------|------|------|
-| Model | DeepSeek-v3p2 | MiniMax-M3 |
-| Pairs | 110 | 71 |
-| Pass Rate | 65.9% | 82.6% |
-| Reaction Types | 13 | 18 |
-| Avg Quality | 0.636 | 0.671 |
-
-</div>
-<div>
-
-| Split | Merged |
-|-------|--------|
-| **Train** | 136 |
+| Split | Pairs |
+|---|---|
+| **Train** | 124 |
 | **Validation** | 6 |
-| **Test** | 45 |
+| **Test** | 42 |
 | **Total** | **172** |
-| **Reaction Types** | **19** |
-| **Avg Quality** | **0.650** |
 
-</div>
-</div>
+| Metric | v1.0 (DeepSeek) | v3.0 (MiniMax-M3) | Merged |
+|---|---|---|---|
+| **Pairs** | 110 | 62 | **172** |
+| **Hypotheses** | 167 | 89 | 256 |
+| **Pass Rate** | 65.9% | 69.7% | **67.2%** |
+| **Reaction Types** | 13 | 18 | **19** |
+| **Avg Quality Score** | 0.636 | 0.671 | **0.650** |
 
-<div style="margin-top: 20px; text-align: center; font-size: 0.9em;">
-🤗 Published on HuggingFace: <code>aayushkrm/autochem-instruct</code>
-</div>
+Published on HuggingFace: `aayushkrm/autochem-instruct`
 
 ---
 
 # Ablation: 7-Variant Evolution Study
 
-| Variant | ME | CARL | Elites | Pass Rate | Quality | Impact |
-|---------|:--:|:----:|--------|-----------|---------|--------|
-| Baseline | — | — | 10 | 69.0% | 0.59 | — |
-| Bootstrap-Only | — | — | 11 | 68.9% | 0.61 | +10% elites |
-| **CARL-Only** | — | ✅ | 15 | **78.8%** | 0.67 | +14% pass |
-| **MAP-Elites-Only** | ✅ | — | **24** | 75.0% | 0.60 | 2.4× elites |
-| No-Reflection | — | — | 10 | 66.3% | 0.59 | — |
-| No-RAG | — | — | 13 | 68.0% | 0.65 | — |
-| **Full-System** | ✅ | ✅ | **25** | **84.6%** | **0.72** | **2.5× +17% pass** |
+| Variant | ME | CARL | Elites | Pass Rate | Quality |
+|---|---|---|---|---|---|
+| Baseline | — | — | 10 | 69.0% | 0.59 |
+| Bootstrap-Only | — | — | 11 | 68.9% | 0.61 |
+| **CARL-Only** | — | ✓ | 15 | **78.8%** | 0.67 |
+| **MAP-Elites-Only** | ✓ | — | **24** | 75.0% | 0.60 |
+| No-Reflection | — | — | 10 | 66.3% | 0.59 |
+| No-RAG | — | — | 13 | 68.0% | 0.65 |
+| **Full-System** | ✓ | ✓ | **25** | **84.6%** | **0.72** |
 
-<div style="margin-top: 15px; padding: 10px; background: #27ae60; border-radius: 8px; text-align: center;">
-<b>Key Finding:</b> MAP-Elites scales population (2.4×) · CARL improves quality (+14% pass)<br>
-<b>Combined:</b> 3.5× elites · +17% pass rate · Complementary benefits
-</div>
+**Key Findings:**
+
+- **MAP-Elites scales population** — 2.4× more elite discoveries (24 vs 10)
+- **CARL improves quality** — +14% pass rate (78.8% vs 69.0%)
+- **Combined (Full-System)** — 3.5× elites, +17% pass rate vs Baseline
 
 ---
 
 # GigaEvo + Maestro CARL Integration
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-<div>
+**GigaEvo** — GitHub: [FusionBrainLab/gigaevo-core](https://github.com/FusionBrainLab/gigaevo-core), arXiv:2511.17592
 
-### GigaEvo
-**[FusionBrainLab/gigaevo-core](https://github.com/FusionBrainLab/gigaevo-core)**
-arXiv:2511.17592, 115+ ⭐
+| GigaEvo Component | Our Implementation | LOC |
+|---|---|---|
+| Redis Database | src/evolution/redis_store.py | 229 |
+| Async DAG Engine | src/evolution/dag.py | 293 |
+| MAP-Elites Evolution | src/evolution/map_elites.py | 491 |
+| Problem Interface | problems/autochem/ | 349 |
 
-| Component | Our Code | LOC |
-|-----------|----------|-----|
-| Redis DB | redis_store.py | 229 |
-| DAG Engine | dag.py | 293 |
-| MAP-Elites | map_elites.py | 491 |
-| Problem I/F | problems/autochem/ | 349 |
+**Maestro CARL** — GitHub: [AIRI-Institute/maestro-core](https://github.com/AIRI-Institute/maestro-core)
 
-</div>
-<div>
+| CARL Component | Our Implementation | LOC |
+|---|---|---|
+| Event-Action-Result Chains | src/carl/chain.py | 463 |
+| StepDescription / ReasoningChain | CARLChain with DAGPipeline | — |
+| Parallel DAG Execution | Steps 1-3 parallel | — |
 
-### Maestro CARL
-**[AIRI-Institute/maestro-core](https://github.com/AIRI-Institute/maestro-core)**
-MIT License
-
-| Component | Our Code | LOC |
-|-----------|----------|-----|
-| Event-Action-Result | chain.py | 463 |
-| StepDescription | CARLChain class | — |
-| Parallel DAG | Steps 1-3 parallel | — |
-
-</div>
-</div>
-
-<div style="margin-top: 30px; text-align: center; font-style: italic;">
-Custom implementations following AIRI's published architecture patterns<br>
-27 scraped research documents in <code>docs/research/</code>
-</div>
+Custom implementations following AIRI's published architecture patterns. 27 scraped research documents in `docs/research/`.
 
 ---
 
 # Conclusion & Future Work
 
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-<div>
+## What We Achieved
 
-### What We Achieved
+- 4-agent autonomous pipeline for chemistry data generation
+- Self-bootstrapping loop with physical ground truth
+- MAP-Elites evolution across 2,600-cell behavior grid
+- CARL 4-step causal reasoning chains (parallel DAG)
+- 172 DPO pairs across 19 reaction types
+- 7-variant ablation study with component impact analysis
+- 230/230 tests, 7,530 source LOC, MIT licensed
 
-✅ **4-agent autonomous pipeline** for chemistry data generation
+## Future Directions
 
-✅ **Self-bootstrapping loop** with physical ground truth
+- Full xTB energetic validation for reaction barrier estimation
+- Distributed MAP-Elites execution for 1000+ hypotheses
+- Fine-tune chemistry DSLMs on the resulting dataset
+- Replace simulated evaluators with real LLM feedback in evolution loop
+- Extend framework to materials science and drug discovery domains
 
-✅ **MAP-Elites evolution** across 2,600-cell grid
-
-✅ **CARL 4-step** causal reasoning chains
-
-✅ **172 DPO pairs** across 19 reaction types
-
-✅ **7-variant ablation** proving component impact
-
-✅ **230/230 tests** · 7,530 lines · MIT licensed
-
-</div>
-<div>
-
-### Future Directions
-
-🔮 **xTB energetic validation** — full reaction barrier estimation
-
-🔮 **Distributed MAP-Elites** — 1000+ hypothesis parallel evolution
-
-🔮 **Fine-tune chemistry DSLMs** — train on our dataset
-
-🔮 **Live evolution loop** — replace simulated evaluators with real LLM feedback
-
-🔮 **Materials science extension** — expand beyond organic chemistry
-
-</div>
-</div>
-
-<div style="margin-top: 30px; text-align: center; font-size: 1.2em;">
-<b>Auto-ChemInstruct demonstrates that autonomous,<br>
-physics-grounded data generation is feasible at scale.</b>
-</div>
+**Auto-ChemInstruct demonstrates that autonomous, physics-grounded data generation is feasible at scale.**
 
 ---
 
 # Thank You
 
-<div style="text-align: center; margin: 50px 0;">
-
 ## Auto-ChemInstruct
 
 **Agent-Driven Synthesization of RLHF Data for Chemistry DSLMs**
 
-<br>
-
-🤗 [aayushkrm/autochem-instruct](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
+🤗 [huggingface.co/datasets/aayushkrm/autochem-instruct](https://huggingface.co/datasets/aayushkrm/autochem-instruct)
 
 🏗️ [github.com/aayushkrm/auto-cheminstruct](https://github.com/aayushkrm/auto-cheminstruct)
 
 <br>
 
 **Questions?**
-
-</div>
