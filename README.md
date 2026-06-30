@@ -295,6 +295,57 @@ uv run python -m src.cli.main config-cmd
 - **Redis** (optional) — distributed state persistence
 - **HuggingFace Datasets** — dataset export and upload
 
+## Command Code Agent Skills Audit
+
+This project was built using **Command Code's agent skills system** — 35 specialized skill modules in `.commandcode/skills/`. Below is the complete mapping of which skills were used, where they were applied, and what they produced.
+
+### Skills → Code Implementation Map
+
+| Skill | Type | Used In | Result |
+|-------|------|---------|--------|
+| **hypothesis-generation** | Implementation | `src/agents/hypothesis_agent.py` | 19 reaction types, 8 prompt templates, JSON extraction, SMILES validation |
+| **physical-verification** | Implementation | `src/agents/verification_agent.py` | 7-step cascade: SMILES→valence→conformer→steric→descriptors→xTB/MMFF94→pass/fail |
+| **causal-reflection** | Implementation | `src/agents/reflection_agent.py`, `src/carl/chain.py` | 10 failure categories, CARL 4-step DAG chain, LearningContext accumulation |
+| **dataset-compilation** | Implementation | `src/agents/compilation_agent.py`, `src/compilation/quality.py` | DPO pairs, 6-dim quality scoring, train/val/test splits, HF export |
+| **agent-architecture** | Implementation | `src/pipeline/orchestrator.py`, `src/evolution/` | Hub-spoke topology, state machine, DAG pipeline, stage models |
+| **code-standards** | Implementation | All 30 source files | Type annotations, Pydantic v2, Loguru, OmegaConf, pre-commit hooks |
+| **rdkit** | Domain | `src/chemistry/rdkit_wrapper.py` | SMILES parsing, descriptors (MW, LogP, TPSA, QED, SA), conformers (ETKDGv3), Murcko scaffolds, Morgan fingerprints |
+| **networkx** | Domain | `src/rag/chemical_rag.py` | Chemical knowledge graph with typed edges, multi-hop retrieval, graph traversal |
+| **medchem** | Domain | `src/chemistry/rdkit_wrapper.py` | Drug-likeness rules, PAINS filters, structural alerts, reactive group detection |
+| **molfeat** | Domain | `src/chemistry/diversity.py` | ECFP/MACCS fingerprint design, featurization strategy |
+| **parallel-web** | Research | `docs/research/` (27 files) | Scraped AIRI framework docs: GigaEvo (12), Maestro (5), GigaChain (3), ChemCrow (2), AiZynthFinder (1) |
+| **paper-lookup** | Research | `paper/references.bib` | GigaEvo (arXiv:2511.17592), AlphaEvolve, ChemCoTBench, ChemCrow, MAP-Elites citations |
+| **literature-review** | Research | `docs/maestro-gigachain-gigaevo-research.md` | Systematic AIRI ecosystem analysis with framework verdicts and integration decisions |
+| **scientific-brainstorming** | Research | `autochem_reportandplan.md` | 4 proposed architectures, Auto-ChemInstruct selected from candidate pool |
+| **scientific-writing** | Research | `paper/main.tex` | NeurIPS LaTeX scaffold, IMRAD structure, ablation tables, ChemCoTBench comparison |
+| **peer-review** | Research | Paper quality validation | Methodology assessment, statistical validity check, reporting standards compliance |
+| **database-lookup** | Research | Seed reaction validation | PubChem queries for chemical reference data |
+| **get-available-resources** | Infra | Pipeline configuration | CPU/memory/disk assessment → batch size and parallelism tuning |
+| **exploratory-data-analysis** | Infra | `src/chemistry/diversity.py`, `src/compilation/quality.py` | Dataset quality metrics, reaction type distributions, quality score histograms |
+
+### Skills Usage Summary
+
+```
+Category          Count    Skills Used
+──────────────────────────────────────────────────────────────
+Implementation     6      hypothesis-generation, physical-verification,
+                          causal-reflection, dataset-compilation,
+                          agent-architecture, code-standards
+Domain Science     4      rdkit, networkx, medchem, molfeat
+Research           7      parallel-web, paper-lookup, literature-review,
+                          scientific-brainstorming, scientific-writing,
+                          peer-review, database-lookup
+Infrastructure     2      get-available-resources, exploratory-data-analysis
+──────────────────────────────────────────────────────────────
+Total Used        19      of 35 available skills
+Not Used          16      cobrapy, datamol, deepchem, diffdock, mol-dynamics,
+                          pytdc, pymatgen, pymoo, rowan, schematics, viz,
+                          statistical-analysis, torch-geometric, torchdrug,
+                          hugging-science, research-lookup
+```
+
+**Key takeaway**: The 4 core agent skills (hypothesis-generation, physical-verification, causal-reflection, dataset-compilation) directly shaped the architecture. The research skills (parallel-web, paper-lookup, literature-review) enabled the comprehensive 27-document analysis of AIRI's GigaEvo/Maestro ecosystem, which in turn informed the custom MAP-Elites and CARL implementations. Domain skills (rdkit, networkx, medchem) provided the cheminformatics backbone for physical validation and chemical knowledge graph construction.
+
 ## Citation
 
 ```bibtex

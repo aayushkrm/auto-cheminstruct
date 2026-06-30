@@ -106,3 +106,32 @@ Both are custom-built from scratch following AIRI's published architecture patte
 - [ ] arXiv preprint upload
 - [ ] Zenodo archive publish (DOI)
 - [ ] Presentation/defense preparation
+
+## Command Code Skills Audit
+
+The project was built using Command Code's agent skills system (`.commandcode/skills/` — 35 skill modules).
+19 were directly used; 16 were available but not needed.
+
+### Skills → Code Implementation Map
+
+| Skill | Usage | Deliverable |
+|-------|-------|-------------|
+| hypothesis-generation | Prompt engineering, 8 templates, JSON extraction | src/agents/hypothesis_agent.py |
+| physical-verification | 7-step validation cascade, xTB/MMFF94 | src/agents/verification_agent.py, src/chemistry/ |
+| causal-reflection | 10 categories, CARL 4-step chain | src/agents/reflection_agent.py, src/carl/chain.py |
+| dataset-compilation | DPO pairs, 6-dim quality, HF export | src/agents/compilation_agent.py, src/compilation/quality.py |
+| agent-architecture | Hub-spoke topology, DAG, state machine | src/pipeline/orchestrator.py, src/evolution/ |
+| code-standards | Types, Pydantic, Loguru, pre-commit | All 30 source files |
+| rdkit | SMILES, descriptors, MMFF94, scaffolds | src/chemistry/rdkit_wrapper.py |
+| networkx | Chemical knowledge graph, multi-hop RAG | src/rag/chemical_rag.py |
+| medchem | Drug-likeness, PAINS, structural alerts | src/chemistry/rdkit_wrapper.py (feasibility) |
+| molfeat | ECFP/MACCS fingerprints | src/chemistry/diversity.py |
+| parallel-web | AIRI framework docs (27 pages scraped) | docs/research/ |
+| paper-lookup | GigaEvo, AlphaEvolve, ChemCoTBench citations | paper/references.bib |
+| literature-review | AIRI ecosystem systematic analysis | docs/maestro-gigachain-gigaevo-research.md |
+| scientific-brainstorming | 4 architecture proposals, Auto-ChemInstruct selected | autochem_reportandplan.md |
+| scientific-writing | NeurIPS LaTeX, IMRAD, ablation tables | paper/main.tex |
+| peer-review | Paper methodology validation | Quality assurance |
+| database-lookup | PubChem reference data for seeds | problems/autochem/initial_programs/ |
+| get-available-resources | CPU/memory/disk → batch size config | Pipeline configuration |
+| exploratory-data-analysis | Diversity metrics, quality distributions | src/chemistry/diversity.py |
