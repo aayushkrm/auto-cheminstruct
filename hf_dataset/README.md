@@ -36,7 +36,7 @@ configs:
 
 > Internship: TSU Lab of AI in Chemistry × AIRI Institute (Moscow, Russia)
 >
-> **Dataset v2.0** — 181 pairs across 19 reaction types
+> **Dataset v2.0** — 172 pairs across 19 reaction types
 
 An autonomous, self-verifying multi-agent pipeline that generates physically-validated DPO/RLHF preference pairs for chemistry instruction tuning. Built on AIRI's [GigaEvo](https://github.com/FusionBrainLab/gigaevo-core) (MAP-Elites evolutionary search, arXiv:2511.17592) and [Maestro CARL](https://github.com/AIRI-Institute/maestro-core) (structured reasoning chains) frameworks.
 
@@ -44,11 +44,13 @@ An autonomous, self-verifying multi-agent pipeline that generates physically-val
 
 | Metric | Value |
 |---|---|
-| Total pairs | **181** |
-| Splits | 130 train / 6 val / 45 test |
+| Total pairs | **172** |
+| Splits | 124 train / 6 val / 42 test |
 | Reaction types | 19 distinct |
 | Avg quality score | 0.650 (6-dim rubric) |
-| Pass rate | 71.5% (253 total hypotheses) |
+| Pass rate | 67.2% (256 total hypotheses) |
+| v1.0 | 110 pairs, DeepSeek-v3p2, 65.9% pass |
+| v3.0 | 62 pairs, MiniMax-M3, 69.7% pass |
 | Self-bootstrapping | 3 iterations, cosine annealing (1.0→0.3) |
 
 ## Ablation Results (7-variant evolution study)

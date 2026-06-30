@@ -97,18 +97,18 @@
 - [x] Evolution ablation framework (7 variants)
 - [x] ChemCoT comparison module
 - [x] Dataset v1.0 (110 pairs)
-- [x] Dataset v2.0 (181 pairs, HuggingFace updated)
+- [x] Dataset v2.0 (172 pairs, HuggingFace updated)
 
 ## Phase VII: Paper & Release ✅ (in-progress for arXiv/Zenodo)
 - [x] Architecture overview (docs/architecture.md)
 - [x] Configuration reference (docs/configuration.md)
 - [x] LaTeX paper scaffold (paper/main.tex + references.bib)
-- [x] Paper updated with real numbers (181 pairs, 19 types, ablation results)
+- [x] Paper updated with real numbers (172 pairs, 19 types, ablation results)
 - [x] Evolution ablation table (7 variants)
 - [x] GigaEvo/AlphaEvolve/MAP-Elites/ChemCrow/ChemCoTBench citations
 - [x] Dockerfile updated for reproducibility
 - [x] GitHub repo: github.com/aayushkrm/auto-cheminstruct
-- [x] HuggingFace dataset: aayushkrm/autochem-instruct (181 pairs)
+- [x] HuggingFace dataset: aayushkrm/autochem-instruct (172 pairs)
 - [x] README defense-ready
 - [ ] arXiv preprint
 - [ ] Zenodo archive publish

@@ -1,6 +1,6 @@
 {
   "title": "Auto-ChemInstruct: Agent-Driven Synthesization of RLHF Data for Chemistry DSLMs",
-  "description": "Auto-ChemInstruct is an autonomous multi-agent pipeline that generates physically-validated instruction datasets for chemistry domain-specific language models. The system combines four specialized agents (Hypothesis Generation, Physical Verification, Causal Reflection, Dataset Compilation) orchestrated through a self-bootstrapping reflection loop with MAP-Elites evolutionary search and CARL structured reasoning chains. This repository contains the full source code, 181 DPO/RLHF preference pairs spanning 19 reaction types with causal reflection traces, 7-variant evolution ablation study framework, ChemCoTBench comparison benchmarks, and a NeurIPS-format paper scaffold.",
+  "description": "Auto-ChemInstruct is an autonomous multi-agent pipeline that generates physically-validated instruction datasets for chemistry domain-specific language models. The system combines four specialized agents (Hypothesis Generation, Physical Verification, Causal Reflection, Dataset Compilation) orchestrated through a self-bootstrapping reflection loop with MAP-Elites evolutionary search and CARL structured reasoning chains. This repository contains the full source code, 172 DPO/RLHF preference pairs spanning 19 reaction types with causal reflection traces, 7-variant evolution ablation study framework, ChemCoTBench comparison benchmarks, and a NeurIPS-format paper scaffold.",
   "creators": [
     {
       "name": "Stepanov, Deyan Nikolaevich",

@@ -11,7 +11,7 @@
 
 > **TSU Lab of AI in Chemistry & Molecular Engineering × AIRI Institute (Moscow)** · NeurIPS Datasets & Benchmarks Track
 >
-> ✅ Complete — 230/230 tests, 181 DPO pairs, 19 reaction types, defense-ready
+> ✅ Complete — 230/230 tests, 172 DPO pairs, 19 reaction types, defense-ready
 
 ---
 
@@ -22,7 +22,7 @@ An autonomous multi-agent pipeline that generates **physically-validated chemist
 - **MAP-Elites Evolutionary Search** — 2,600-cell behavior grid with 5 mutation operators replaces random temperature exploration with quality-diversity optimization
 - **CARL 4-Step Reasoning Chains** — Parallel DAG-based causal decomposition (Steric → Electronic → Thermo → Synthesis) produces chemically-grounded failure explanations
 
-**Result**: 181 DPO preference pairs across 19 reaction types, 7-variant ablation showing 3.5× elite discovery and +17% pass rate with Full-System vs Baseline.
+**Result**: 172 DPO preference pairs across 19 reaction types, 7-variant ablation showing 3.5× elite discovery and +17% pass rate with Full-System vs Baseline.
 
 ---
 
@@ -52,17 +52,17 @@ An autonomous multi-agent pipeline that generates **physically-validated chemist
 
 ## Key Results
 
-### Dataset v2.0 — 181 DPO Pairs
+### Dataset — 172 DPO Pairs
 
 | Split | Pairs |
 |-------|-------|
-| Train | 136 |
+| Train | 124 |
 | Validation | 6 |
-| Test | 45 |
-| **Total** | **181** |
+| Test | 42 |
+| **Total** | **172** |
 | Reaction Types | 19 |
 | Avg Quality Score | 0.650 |
-| Pass Rate | 71.5% |
+| Pass Rate | 67.2% |
 
 ### 7-Variant Evolution Ablation
 
@@ -86,7 +86,7 @@ An autonomous multi-agent pipeline that generates **physically-validated chemist
 | **III: MAP-Elites** | 2,600-cell grid, 5 mutation ops, 4 islands, migration, deterministic RNG | 202 |
 | **IV: CARL Chains** | 4-step parallel DAG reflection, batch filtering, CARLReflectionAgent | 219 |
 | **V: Ablation + Paper** | 7-variant evolution ablation, NeurIPS LaTeX, ChemCoTBench comparison | **230** |
-| **v2.0 Dataset** | 181 pairs (v1+v2 merged), MiniMax-M3, JSON mode, HuggingFace | 230 |
+| **Dataset** | 172 pairs (v1.0+v3.0 merged), MiniMax-M3, JSON mode, HuggingFace | 230 |
 
 ---
 

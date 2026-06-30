@@ -5,7 +5,7 @@
 - **Full Title**: Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models
 - **Publication Target**: NeurIPS Datasets & Benchmarks Track
 - **GitHub**: github.com/aayushkrm/auto-cheminstruct
-- **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct (181 pairs)
+- **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct (172 pairs)
 
 ## Status: COMPLETE — 230/230 tests, defense-ready (2026-06-30)
 
@@ -50,7 +50,7 @@
 - 230 tests
 
 ### Dataset v2.0 (906fb9b)
-- Merged dataset: 181 DPO pairs (136 train + 45 test)
+- Merged dataset: 172 DPO pairs (136 train + 45 test)
 - 19 reaction types, avg quality 0.650
 - v2.0: 71 pairs at 82.6% pass rate (MiniMax-M3)
 - HuggingFace updated
@@ -84,7 +84,7 @@ Both are custom-built from scratch following AIRI's published architecture patte
 
 | Metric | v1.0 | v2.0 | Merged |
 |--------|------|------|--------|
-| Pairs | 110 | 71 | 181 |
+| Pairs | 110 | 71 | 172 |
 | Reaction Types | 13 | 18 | 19 |
 | Pass Rate | 65.9% | 82.6% | 71.5% |
 | Avg Quality | 0.636 | 0.671 | 0.650 |

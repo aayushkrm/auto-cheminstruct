@@ -172,7 +172,7 @@ Step 3: Thermodynamic Analysis┘
 
 ---
 
-# Dataset Results — 181 DPO Pairs
+# Dataset Results — 172 DPO Pairs
 
 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
 <div>
@@ -193,7 +193,7 @@ Step 3: Thermodynamic Analysis┘
 | **Train** | 136 |
 | **Validation** | 6 |
 | **Test** | 45 |
-| **Total** | **181** |
+| **Total** | **172** |
 | **Reaction Types** | **19** |
 | **Avg Quality** | **0.650** |
 
@@ -279,7 +279,7 @@ Custom implementations following AIRI's published architecture patterns<br>
 
 ✅ **CARL 4-step** causal reasoning chains
 
-✅ **181 DPO pairs** across 19 reaction types
+✅ **172 DPO pairs** across 19 reaction types
 
 ✅ **7-variant ablation** proving component impact
 
