@@ -1,61 +1,108 @@
-# Auto-ChemInstruct Memory & Roadmap
+# Auto-ChemInstruct Memory & Status
 
 ## Project Identity
 - **Name**: Auto-ChemInstruct
 - **Full Title**: Agent-Driven Synthesization of RLHF Data for Domain-Specific Language Models
 - **Publication Target**: NeurIPS Datasets & Benchmarks Track
 - **GitHub**: github.com/aayushkrm/auto-cheminstruct
-- **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct (66 pairs)
+- **HuggingFace**: huggingface.co/datasets/aayushkrm/autochem-instruct (181 pairs)
 
-## Status: PRODUCTION-READY — All components functional, ablation validated (2026-05-09)
+## Status: COMPLETE — 230/230 tests, defense-ready (2026-06-30)
 
 ## LLM Provider
-- **Fireworks AI**: model `accounts/fireworks/models/deepseek-v3p2`
-- **Energetic validation**: RDKit MMFF94 force-field fallback (real energies, no external binary)
-- **RAG**: Lightweight TF-IDF + NetworkX knowledge graph (offline, no API keys, no ChromaDB)
+- **Fireworks AI**: model `accounts/fireworks/models/minimax-m3`
+- **API Key**: `FIREWORKS_API_KEY` environment variable (no hardcoded keys)
+- **JSON Mode**: `response_format=json_object` for reliable parsing
+- **Rate Limiting**: 8s delay between LLM calls (configurable)
 
-## Core Innovations
+## Implementation Summary
 
-### 1. Self-Bootstrapping Reflection Loop
-Generate → Verify → Reflect → Accumulate Learning → Repeat with learned constraints.
-Temperature cosine annealing (1.0→0.3) across iterations.
+### Phase I: Foundation (df5a2ca)
+- Redis state layer with in-memory fallback
+- 5 Hydra YAML hierarchical configs
+- Problem directory (5 seed reactions, validate.py, metrics.yaml)
+- 140 tests
 
-### 2. Multi-Hop Chemical RAG
-TF-IDF vector search + NetworkX knowledge graph with typed edges (reactant_of, product_of, has_scaffold, contains_group). Multi-hop retrieval with query decomposition.
+### Phase II: DAG Engine (a522fb5)
+- Async DAGPipeline with Kahn topological sort
+- Semaphore-bounded parallelism, failure propagation
+- 8 Pydantic I/O models, 4 agent factory functions
+- linear_parity_check() for DAG vs sequential comparison
+- 163 tests
 
-### 3. MMFF94 Energetic Validation
-RDKit Merck Molecular Force Field provides real computed energies as xTB fallback. Physically realistic, no binary dependencies.
+### Phase III: MAP-Elites (1467e7e)
+- 2,600-cell behavior grid (26×10×10)
+- 5 mutation operators: reactant substitution, condition optimization, reaction crossover, scaffold hopping, insight-guided
+- 4 specialist islands (diversity, quality, novelty, yield) with conservative migration
+- Seeding, stagnation convergence (10 gens), deterministic RNG
+- 202 tests
 
-### 4. Chemical Feasibility + Quality Scoring
-6 chemistry-aware quality dimensions (structural validity, QED, reflection depth, yield, scaffold diversity, reaction specificity).
+### Phase IV: CARL Chains (f5d3dcf)
+- 4-step parallel DAG reflection: StericAnalysis → ElectronicAnalysis → ThermodynamicAnalysis → CausalSynthesis
+- CARLReflectionAgent with batch filtering
+- Chemistry-specific LLM prompts for each step
+- 219 tests
 
-## Test Coverage: 129/129 passing
+### Phase V: Ablation + Paper (1834c45)
+- 7-variant evolution ablation (Baseline, Bootstrap, CARL, MAP-Elites, No-Reflection, No-RAG, Full-System)
+- CLI --mode evolution flag
+- Updated NeurIPS paper with evolution results
+- 230 tests
 
-## Most Recent Ablation (2026-05-09, N=8/variant)
+### Dataset v2.0 (906fb9b)
+- Merged dataset: 181 DPO pairs (136 train + 45 test)
+- 19 reaction types, avg quality 0.650
+- v2.0: 71 pairs at 82.6% pass rate (MiniMax-M3)
+- HuggingFace updated
 
-| Variant | Pairs | Pass% | Diversity | Quality |
-|---|---|---|---|---|
-| Full-System | 15 | 78.9% | 0.877 | 0.653 |
-| No-Bootstrap | 6 | 100% | 0.901 | 0.576 |
-| No-Reflection | 17 | 89.5% | 0.878 | 0.568 |
-| No-RAG | 15 | 71.4% | 0.876 | 0.660 |
+### Final Cleanup (d9dab54)
+- API key to env var, .env.example added
+- Stale deps removed, old checkpoints/datasets cleaned
+- Reflection agent JSON mode
+- 230 tests
 
-**Key empirical claims:**
-- Bootstrap → 2.5× more pairs (volume)
-- Reflection → +15.4% quality (grounding)
-- RAG → +7.5 pp pass rate (accuracy)
+## GigaEvo + Maestro CARL Integration
 
-## Dataset (Final: 2026-05-09)
-- HuggingFace: `aayushkrm/autochem-instruct` — **110 pairs** (81 train, 6 val, 23 test)
-- 187 unique molecules, 87.9% Tanimoto diversity, 33.2% scaffold diversity
-- 13 distinct reaction types, 72.8% causal reflection coverage
-- Avg quality 0.636 (6-dimension rubric)
+### Architecture Alignment
 
-## Known Issues
-- Reaction type diversity: LLM tends to return "other" despite named type prompts
-- Solution in progress: stronger system prompt constraints + exact regex matching
+| GigaEvo Component | Our Implementation | Lines | Tests |
+|---|---|---|---|
+| Redis Database | src/evolution/redis_store.py | 229 | 19 |
+| Async DAG Engine | src/evolution/dag.py | 293 | 23 |
+| MAP-Elites Engine | src/evolution/map_elites.py | 491 | 39 |
+| Problem Interface | problems/autochem/ | 349 | — |
+
+| Maestro CARL Component | Our Implementation | Lines | Tests |
+|---|---|---|---|
+| Event-Action-Result Chains | src/carl/chain.py | 463 | 17 |
+| StepDescription/ReasoningChain | CARLChain with DAGPipeline | — | — |
+| Parallel DAG Execution | Steps 1-3 run in parallel | — | — |
+
+Both are custom-built from scratch following AIRI's published architecture patterns. No external GigaEvo or Maestro packages exist on PyPI.
+
+## Dataset
+
+| Metric | v1.0 | v2.0 | Merged |
+|--------|------|------|--------|
+| Pairs | 110 | 71 | 181 |
+| Reaction Types | 13 | 18 | 19 |
+| Pass Rate | 65.9% | 82.6% | 71.5% |
+| Avg Quality | 0.636 | 0.671 | 0.650 |
+| Splits | 81/6/23 | 49/0/22 | 136/45 test |
+
+## Key Results
+- Self-bootstrapping: 2.5× more pairs
+- Reflection: +15.4% quality improvement
+- RAG: +7.5pp pass rate
+- Full-System evolution: 3.5× elites, +17% pass rate over Baseline
+
+## Known Limitations
+- Reflection traces not embedded in v2.0 output pairs (MiniMax-M3 reflection JSON parsing issue — fixed in final cleanup with llm_json)
+- MiniMax-M3 occasional invalid SMILES (e.g., Grignard reagents)
+- xTB binary not installed (MMFF94 fallback used instead)
+- No arXiv/Zenodo submission yet
 
 ## Next Steps
-1. arXiv preprint upload (arxiv_submission.tar.gz ready in repo root)
-2. Zenodo archive publish (zip repo → zenodo.org/deposit for DOI)
-3. (Done) Scale dataset — 110 pairs achieved
+- [ ] arXiv preprint upload
+- [ ] Zenodo archive publish (DOI)
+- [ ] Presentation/defense preparation
