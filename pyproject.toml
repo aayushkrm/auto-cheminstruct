@@ -72,10 +72,7 @@ viz = [
     "seaborn>=0.13.0",
     "py3Dmol>=2.1.0",
 ]
-evolution = [
-    "faiss-cpu>=1.8.0",
-    "mmar-carl>=0.2.0",
-]
+evolution = []
 
 [project.scripts]
 auto-chem = "src.cli.main:app"

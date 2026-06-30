@@ -1,5 +1,6 @@
 """Centralized configuration management using OmegaConf and Pydantic."""
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -138,6 +139,12 @@ def load_config(config_path: str | None = None) -> AutoChemConfig:
     try:
         omega_conf = OmegaConf.load(config_path)
         dict_conf = OmegaConf.to_container(omega_conf, resolve=True)
-        return AutoChemConfig.model_validate(dict_conf)
+        config = AutoChemConfig.model_validate(dict_conf)
+
+        # Resolve API key from environment if not set in config
+        if not config.llm.api_key:
+            config.llm.api_key = os.environ.get("FIREWORKS_API_KEY")
+
+        return config
     except Exception as e:
         raise ConfigurationError(f"Failed to load config from {config_path}: {e}") from e

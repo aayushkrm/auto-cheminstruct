@@ -36,7 +36,7 @@ def _make_mock_llm():
                 '{"failure_categories": ["steric_hindrance"], '
                 '"primary_cause": "Bulky tert-butyl group blocks approach", '
                 '"causal_explanation": "The large substituent prevents the nucleophile '
-                'from approaching the electrophilic carbon center. The transition state '
+                "from approaching the electrophilic carbon center. The transition state "
                 'requires an impossible geometry due to van der Waals clashes.", '
                 '"chemical_principles": ["Steric hindrance", "SN2 mechanism"], '
                 '"fix_suggestion": "Replace with a smaller electrophile or use SN1 conditions", '
@@ -67,7 +67,7 @@ class TestEndToEndPipeline:
     def test_pipeline_start_session(self, mock_llm):
         config = load_config()
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         session_id = orch.start_session()
         assert session_id is not None
@@ -78,7 +78,7 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 3
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         result = orch.run_pipeline(num_hypotheses=3)
 
@@ -96,7 +96,7 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 2
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         session_id = orch.start_session()
         orch._save_checkpoint()
@@ -111,7 +111,7 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 1
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         result = orch.run_pipeline(num_hypotheses=1)
         assert result["summary"]["hypotheses_generated"] >= 0
@@ -121,7 +121,7 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 3
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         orch.start_session()
         hypotheses = orch._generate_hypotheses(num_hypotheses=3)
@@ -138,7 +138,7 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 2
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         orch.start_session()
 
@@ -163,19 +163,16 @@ class TestEndToEndPipeline:
         config.pipeline.batch_size = 2
 
         orch = PipelineOrchestrator(config)
-        orch.llm = mock_llm
+        orch.llm = orch.llm_json = mock_llm
 
         orch.start_session()
         hypotheses = orch._generate_hypotheses(num_hypotheses=2)
         results = orch._verify_hypotheses(hypotheses)
 
         failed_hyps = [
-            h for h, r in zip(hypotheses, results)
-            if r.status == VerificationStatus.FAILED
+            h for h, r in zip(hypotheses, results) if r.status == VerificationStatus.FAILED
         ]
-        failed_results = [
-            r for r in results if r.status == VerificationStatus.FAILED
-        ]
+        failed_results = [r for r in results if r.status == VerificationStatus.FAILED]
         traces = orch._reflect_on_failures(failed_hyps, failed_results)
 
         compilation = orch._compile_dataset(hypotheses, results, traces)

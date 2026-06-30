@@ -464,7 +464,7 @@ class PipelineOrchestrator:
         from src.agents.reflection_agent import ReflectionAgent
 
         agent = ReflectionAgent(
-            llm=self.llm,
+            llm=self.llm_json,
             temperature=self.config.reflection_agent.temperature,
             max_tokens=self.config.reflection_agent.max_tokens,
         )
