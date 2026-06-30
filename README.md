@@ -177,8 +177,6 @@ Custom-built implementations following AIRI's published architecture patterns (b
 | StepDescription / ReasoningChain | `CARLChain` with `DAGPipeline` | — |
 | Parallel DAG Execution | Steps 1-3 run in parallel | — |
 
-> ⚠️ Note: `gigaevo` is not on PyPI. `mmar-carl` exists but is a financial analysis library, unrelated to chemistry. Both implementations are original code following the published architecture patterns. CARL in our context = **Chemical Analysis Reasoning Layer**.
-
 ---
 
 ## Quick Start
